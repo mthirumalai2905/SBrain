@@ -1,0 +1,62 @@
+# Local development stack for Brain. Localhost only.
+#
+# Start:  docker compose --env-file .env.local -f docker-compose.dev.yml up -d
+# Stop:   docker compose --env-file .env.local -f docker-compose.dev.yml down
+#
+# Every port is bound to 127.0.0.1, so nothing here is reachable from another
+# machine. Values come from .env.local, which is gitignored. Never put real
+# values in this file.
+
+name: brain-dev
+
+services:
+  mysql:
+    image: mysql:8.4.13
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env.local}
+      MYSQL_USER: ${MYSQL_USER:?set MYSQL_USER in .env.local}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env.local}
+      # Database names are fixed. The init script creates both.
+      BRAIN_DB_NAME: brain
+      DIRECTUS_DB_NAME: directus
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  directus:
+    image: directus/directus:11.17.4
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SECRET: ${DIRECTUS_SECRET:?set DIRECTUS_SECRET in .env.local}
+      PUBLIC_URL: http://localhost:${DIRECTUS_PORT:-8055}
+      DB_CLIENT: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: directus
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL:?set DIRECTUS_ADMIN_EMAIL in .env.local}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD:?set DIRECTUS_ADMIN_PASSWORD in .env.local}
+      TELEMETRY: "false"
+    ports:
+      - "127.0.0.1:${DIRECTUS_PORT:-8055}:8055"
+    volumes:
+      - directus-uploads:/directus/uploads
+      - directus-extensions:/directus/extensions
+
+volumes:
+  mysql-data:
+  directus-uploads:
+  directus-extensions:
