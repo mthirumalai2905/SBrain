@@ -1,0 +1,10 @@
+---
+description: A phase is done only when its tests pass
+alwaysApply: true
+---
+
+Run `npm test` before calling a phase done. The command writes `reports/latest.md`.
+
+- Unit tests cover status transitions, the duplicate guard, roles, retries, and the log schema.
+- Integration tests use local fakes. They must not call Google Drive, a website API, or a VPS.
+- Smoke checks against real public URLs stay out of `npm test`. They need `BRAIN_SMOKE=1` and an approval entry.

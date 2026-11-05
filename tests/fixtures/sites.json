@@ -1,0 +1,30 @@
+[
+  {
+    "id": "synx",
+    "name": "Synx",
+    "publicUrl": "https://synx.tools",
+    "callsLiveSystem": false,
+    "sections": ["/news"]
+  },
+  {
+    "id": "realtimeweb",
+    "name": "Real Time Web",
+    "publicUrl": "https://realtimeweb.org",
+    "callsLiveSystem": false,
+    "sections": ["/blog", "/docs"]
+  },
+  {
+    "id": "morph",
+    "name": "Morph Space",
+    "publicUrl": "https://morph.space",
+    "callsLiveSystem": false,
+    "sections": ["/drafts"]
+  },
+  {
+    "id": "skalle",
+    "name": "Skalle AI",
+    "publicUrl": "https://skalle.ai",
+    "callsLiveSystem": false,
+    "sections": ["/articles"]
+  }
+]

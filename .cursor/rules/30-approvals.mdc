@@ -1,0 +1,10 @@
+---
+description: Live systems need a logged approval
+alwaysApply: true
+---
+
+Anything that touches a live site, a VPS, Google Drive credentials, or a publishing connector needs an explicit row in `docs/approvals.md` before it runs.
+
+- Recording a URL stores a link in Brain. It does not publish the page.
+- Recovery runs only after an owner or operator turns the authorisation switch on for that action.
+- Destructive tools stay blocked until a connector exists and an approval id is attached to the run.

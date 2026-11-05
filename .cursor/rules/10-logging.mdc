@@ -1,0 +1,12 @@
+---
+description: Shared audit schema for Brain actions
+alwaysApply: true
+---
+
+Log every agent and tool action with this schema:
+
+timestamp, run_id, actor (human|agent|system), site, tool, input, result, status, duration_ms, retry_count, approval_id, error
+
+- Redact secrets before the event is stored. Keys, bearer tokens, and passwords become `[redacted]`.
+- Use `lib/harness/log.ts`. Do not invent a second log shape for tools.
+- Status is `ok`, `failed`, `blocked`, or `dry_run`.

@@ -1,0 +1,11 @@
+---
+description: Brain stays independent of the live Synx sites
+alwaysApply: true
+---
+
+Brain is the control centre. Synx, Real Time Web, Morph Space, and Skalle AI each stay on their own deployment.
+
+- Keep Brain’s data, jobs, and drafts in this repo’s local store. Do not rebuild or write to a live site from here.
+- Do not hardcode secrets, API keys, database URLs, or server logins. Read them from the environment, and keep `.env.local` out of git.
+- Add a module instead of folding a new site into an existing one. One site’s adapter must be removable without taking the others down.
+- A change that touches a live site, a VPS, Google Drive credentials, or a publishing connector needs an approval entry first.
