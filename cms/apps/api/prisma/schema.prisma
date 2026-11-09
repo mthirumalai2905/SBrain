@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum EntryStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String
+  passwordHash String
+  isSuperAdmin Boolean      @default(false)
+  memberships  Membership[]
+  createdAt    DateTime     @default(now())
+}
+
+model Site {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String        @unique
+  domains      String[]
+  previewUrl   String?
+  apiKey       String        @unique
+  memberships  Membership[]
+  contentTypes ContentType[]
+  entries      Entry[]
+  media        Media[]
+  connectors   Connector[]
+  createdAt    DateTime      @default(now())
+}
+
+model Membership {
+  userId String
+  siteId String
+  role   Role   @default(EDITOR)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@id([userId, siteId])
+}
+
+model ContentType {
+  id        String   @id @default(cuid())
+  siteId    String
+  name      String
+  slug      String
+  fields    Json     @default("[]")
+  kind      String   @default("collection")
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  entries   Entry[]
+  createdAt DateTime @default(now())
+
+  @@unique([siteId, slug])
+}
+
+model Entry {
+  id            String      @id @default(cuid())
+  siteId        String
+  contentTypeId String
+  slug          String?
+  data          Json        @default("{}")
+  status        EntryStatus @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  site          Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  contentType   ContentType @relation(fields: [contentTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([contentTypeId, slug])
+  @@index([siteId, status])
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  siteId       String
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  site         Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+}
+
+/// A source the AI assistant may read from: an MCP server or a REST API. The token is stored encrypted.
+model Connector {
+  id          String   @id @default(cuid())
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  kind        String // "mcp" | "api"
+  name        String
+  url         String
+  description String   @default("")
+  /// header the token is sent in (APIs); empty = Authorization: Bearer
+  tokenHeader String   @default("")
+  tokenEnc    String?
+  allowWrites Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([siteId, name])
+}
