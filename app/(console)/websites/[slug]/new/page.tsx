@@ -3,10 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { NewArticleForm } from "@/components/new-article-form";
 import { PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
+import { intentChoices } from "@/lib/intents";
 import { liveDb } from "@/lib/live";
 import { canEdit } from "@/lib/rbac";
 
-export const metadata: Metadata = { title: "New Article" };
+export const metadata: Metadata = { title: "New change" };
 
 export default async function NewArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const user = await requireUser();
@@ -17,8 +18,8 @@ export default async function NewArticlePage({ params }: { params: Promise<{ slu
   if (!site) notFound();
   return (
     <div>
-      <PageHeader title="New Article" lede={site.name} />
-      <NewArticleForm siteId={site.id} siteName={site.name} sections={site.sections} author={user.name} />
+      <PageHeader title="New change" lede={site.name} />
+      <NewArticleForm siteId={site.id} siteName={site.name} intents={intentChoices([site])} author={user.name} />
     </div>
   );
 }

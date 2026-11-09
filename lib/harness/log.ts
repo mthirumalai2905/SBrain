@@ -47,7 +47,7 @@ export function assertAudit(event: AuditEvent) {
     if (!(key in event)) throw new Error(`Audit event is missing ${key}.`);
   }
   const blob = `${event.input} ${event.result} ${event.error ?? ""}`;
-  if (/gsk_[A-Za-z0-9]/.test(blob) || /Bearer\s+(?!\[redacted\])\S+/i.test(blob)) {
+  if (/gsk_[A-Za-z0-9]/.test(blob) || /gh[psoru]_[A-Za-z0-9]/.test(blob) || /github_pat_[A-Za-z0-9_]/.test(blob) || /BEGIN (?:RSA |OPENSSH )?PRIVATE KEY/.test(blob) || /Bearer\s+(?!\[redacted\])\S+/i.test(blob)) {
     throw new Error("Audit event still contains a secret.");
   }
   return event;

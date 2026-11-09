@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DrivePanel } from "@/components/drive-panel";
 import { PageHeader, Group, Empty } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
+import { intentChoices } from "@/lib/intents";
 import { liveDb } from "@/lib/live";
 import { canEdit } from "@/lib/rbac";
 import { formatWhen } from "@/lib/format";
@@ -15,7 +16,7 @@ export default async function DrivePage() {
     <div>
       <PageHeader
         title="Drive"
-        lede="Google Drive is not connected. There is no OAuth client in this environment, so Brain cannot read Docs or watch a Google folder."
+        lede="Paste a document and choose an intent. Brain routes it to that site and opens one pull request. Google Drive is not connected, so this does not read a Google account."
       />
       <div className="stack">
         <Group title="Connection">
@@ -36,8 +37,8 @@ export default async function DrivePage() {
         </Group>
         <section>
           <h2 className="group-title">Bring in a document</h2>
-          <DrivePanel folders={db.drive.folders} sites={db.sites} canAdd={canEdit(user.role)} />
-          <p className="group-footer">Paste text from a Doc until Drive can be connected. Brain formats it for the chosen website and blocks a second copy of the same title.</p>
+          <DrivePanel folders={db.drive.folders} sites={db.sites} intents={intentChoices(db.sites)} canAdd={canEdit(user.role)} />
+          <p className="group-footer">The intent chooses the paths. A second copy of the same document link is refused. The live site is not changed.</p>
         </section>
         <Group title="Documents">
           {db.drive.files.length ? (
@@ -65,7 +66,7 @@ export default async function DrivePage() {
               );
             })
           ) : (
-            <Empty title="No documents yet" body="Brought-in documents are listed here with the article they became." />
+            <Empty title="No documents yet" body="Brought-in documents are listed here with the change they opened." />
           )}
         </Group>
       </div>

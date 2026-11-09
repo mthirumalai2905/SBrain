@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import type { Article, PublicUser, Section } from "@/lib/types";
 import { renderMarkdown } from "@/lib/markdown";
 import { formatWhen, suggestedPath } from "@/lib/format";
+import { intentById } from "@/lib/intents";
 import { canEdit, canRecordPublication, canReview, canRollback } from "@/lib/rbac";
 import { PageHeader } from "./ui";
 
@@ -57,7 +58,7 @@ export function ArticleWorkspace({
       <PageHeader
         title={article.title}
         status={article.status}
-        lede={`${siteName} · ${article.author}`}
+        lede={[siteName, article.intent ? intentById(article.intent)?.label : "", article.author].filter(Boolean).join(" · ")}
         actions={
           <>
             {canReview(user.role) && article.status === "review_required" ? (

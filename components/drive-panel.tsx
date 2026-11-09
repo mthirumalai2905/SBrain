@@ -2,20 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import type { IntentChoice } from "@/lib/intents";
 import type { Site } from "@/lib/types";
 
 export function DrivePanel({
   folders,
   sites,
+  intents,
   canAdd,
 }: {
   folders: string[];
   sites: Site[];
+  intents: IntentChoice[];
   canAdd: boolean;
 }) {
   const router = useRouter();
   const [folder, setFolder] = useState(folders[0] ?? "Incoming");
   const [siteId, setSiteId] = useState(sites[0]?.id ?? "");
+  const [intentId, setIntentId] = useState("");
+  const [section, setSection] = useState("");
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [documentUrl, setDocumentUrl] = useState("");
@@ -23,6 +28,19 @@ export function DrivePanel({
   const [folderName, setFolderName] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const paths = intents.find((intent) => intent.id === intentId)?.paths.filter((path) => path.siteId === siteId) ?? [];
+
+  function chooseSite(id: string) {
+    const next = intents.find((intent) => intent.id === intentId)?.paths.filter((path) => path.siteId === id) ?? [];
+    setSiteId(id);
+    setSection(next[0]?.path ?? "");
+  }
+
+  function chooseIntent(id: string) {
+    const next = intents.find((intent) => intent.id === id)?.paths.filter((path) => path.siteId === siteId) ?? [];
+    setIntentId(id);
+    setSection(next[0]?.path ?? "");
+  }
 
   async function ingest(event: FormEvent) {
     event.preventDefault();
@@ -31,10 +49,11 @@ export function DrivePanel({
     const res = await fetch("/api/drive", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "ingest", folder, siteId, title, author, documentUrl, body }),
+      body: JSON.stringify({ action: "ingest", folder, siteId, intentId, section, title, author, documentUrl, body }),
     });
     const data = (await res.json()) as { error?: string; articleId?: string };
     setPending(false);
+    router.refresh();
     if (!res.ok) {
       setError(data.error ?? "The document was not brought in.");
       return;
@@ -78,10 +97,31 @@ export function DrivePanel({
           </label>
           <label className="field-row">
             <span className="field-label">Website</span>
-            <select className="select" value={siteId} onChange={(event) => setSiteId(event.target.value)}>
+            <select className="select" value={siteId} onChange={(event) => chooseSite(event.target.value)}>
               {sites.map((site) => (
                 <option key={site.id} value={site.id}>
                   {site.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field-row">
+            <span className="field-label">Intent</span>
+            <select className="select" value={intentId} onChange={(event) => chooseIntent(event.target.value)} required>
+              <option value="">Choose</option>
+              {intents.map((intent) => (
+                <option key={intent.id} value={intent.id}>
+                  {intent.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field-row">
+            <span className="field-label">Path</span>
+            <select className="select" value={section} onChange={(event) => setSection(event.target.value)} required={paths.length > 0} disabled={!paths.length}>
+              {paths.map((path) => (
+                <option key={path.path} value={path.path}>
+                  {path.label}
                 </option>
               ))}
             </select>
@@ -102,8 +142,9 @@ export function DrivePanel({
         <div className="card block-pad">
           <textarea className="textarea" value={body} placeholder="Paste the document text" onChange={(event) => setBody(event.target.value)} required />
         </div>
-        <button className="btn btn-fill" disabled={pending} type="submit" style={{ width: "max-content" }}>
-          {pending ? "Bringing In" : "Bring In"}
+        {intentId && !paths.length ? <p className="error-text">This intent has no path on this website.</p> : null}
+        <button className="btn btn-fill" disabled={pending || !intentId || !paths.length} type="submit" style={{ width: "max-content" }}>
+          {pending ? "Sending" : "Send"}
         </button>
       </form>
       <form onSubmit={addFolder}>

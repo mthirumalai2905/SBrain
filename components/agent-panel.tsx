@@ -5,12 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AgentRun } from "@/lib/types";
 import { formatWhen } from "@/lib/format";
 
-const prompts = [
-  "Check site health",
-  "What is waiting for review?",
-  "Draft a journal for Real Time Web titled “Evening note”",
-  "List the websites",
-];
+const prompts = ["Check site health", "What is waiting for review?", "List the websites"];
 
 export function AgentPanel({ runs, enabled }: { runs: AgentRun[]; enabled: boolean }) {
   const router = useRouter();
@@ -67,7 +62,7 @@ export function AgentPanel({ runs, enabled }: { runs: AgentRun[]; enabled: boole
         {ordered.length === 0 && !inflight ? (
           <div className="thread-empty">
             <strong>No messages yet</strong>
-            <p>Ask about the queue, a draft, or a health check. The reply stays in this panel.</p>
+            <p>Ask about the queue, a site, or a health check. The reply stays in this panel.</p>
           </div>
         ) : null}
         {ordered.map((run) => (

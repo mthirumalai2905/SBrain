@@ -6,6 +6,7 @@ import { statusLabel } from "../rbac";
 import { addLog, createArticle, defaultSectionFor, rollbackArticle, siteById, transitionArticle } from "../workflow";
 import { auditEvent, auditLine, type AuditEvent } from "./log";
 import { toolByName } from "./registry";
+import { groundedTitle } from "../turn";
 
 export interface ToolCall {
   name: string;
@@ -161,7 +162,11 @@ export function applyPlan(db: DB, instruction: string, actor: PublicUser, probes
         continue;
       }
       if (!title) {
-        finish("failed", "Include a title.", false, "Missing title.");
+        finish("failed", "What should the article be about?", false, "Missing title.");
+        continue;
+      }
+      if (!groundedTitle(instruction, title)) {
+        finish("failed", "What should the article be about?", false, "The title was not in the instruction.");
         continue;
       }
       const section = field(input, "section") || defaultSectionFor(site.id);

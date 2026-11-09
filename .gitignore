@@ -8,3 +8,5 @@ _inspect
 .env.*
 !.env.example
 reports
+secrets
+*.pem

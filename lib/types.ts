@@ -69,6 +69,7 @@ export interface Article {
   status: ArticleStatus;
   author: string;
   source: "manual" | "drive" | "agent";
+  intent?: string;
   documentUrl: string;
   body: string;
   publishedUrl: string;
@@ -129,6 +130,7 @@ export interface AgentRun {
   instruction: string;
   reply: string;
   steps: AgentStep[];
+  task?: string;
 }
 
 export interface LogEntry {

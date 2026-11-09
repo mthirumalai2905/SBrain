@@ -25,7 +25,7 @@ export default async function WebsitePage({ params }: { params: Promise<{ slug: 
         actions={
           canEdit(user.role) ? (
             <Link className="btn btn-fill" href={`/websites/${site.slug}/new`}>
-              New Article
+              New change
             </Link>
           ) : null
         }
@@ -69,7 +69,7 @@ export default async function WebsitePage({ params }: { params: Promise<{ slug: 
               />
             ))
           ) : (
-            <Empty title="No articles yet" body="Create one here, or bring a document in from Drive. Either way it stays in Brain until a connector exists." />
+            <Empty title="No changes yet" body="Send one from here, or bring a document in from Drive. The live site stays as it is until a later deploy." />
           )}
         </Group>
       </div>

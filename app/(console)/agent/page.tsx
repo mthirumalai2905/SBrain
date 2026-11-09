@@ -14,7 +14,7 @@ export default async function AgentPage() {
     <div className="agent-screen">
       <PageHeader
         title="AI Agent"
-        lede="Instructions stay inside Brain. The agent can draft, approve, roll back, and check public pages. It cannot publish to the live websites."
+        lede="Instructions stay inside Brain. A short follow-up, such as a website name, continues the request that is open. A change can open a pull request. The live websites are not changed."
       />
       <AgentPanel runs={db.runs} enabled={canUseAgent(user.role)} />
     </div>

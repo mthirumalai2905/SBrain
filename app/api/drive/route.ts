@@ -1,9 +1,7 @@
-import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth";
+import { submitDocument } from "@/lib/change";
 import { canEdit } from "@/lib/rbac";
-import { mutate } from "@/lib/store";
-import { createArticle, defaultSectionFor, queueFormatJob, runQueuedJobs } from "@/lib/workflow";
-import type { DriveFile } from "@/lib/types";
+import { mutate, readDb } from "@/lib/store";
 
 export async function POST(request: Request) {
   const user = await getSession();
@@ -13,6 +11,8 @@ export async function POST(request: Request) {
     name?: string;
     folder?: string;
     siteId?: string;
+    intentId?: string;
+    section?: string;
     title?: string;
     author?: string;
     documentUrl?: string;
@@ -34,54 +34,29 @@ export async function POST(request: Request) {
     return Response.json({ ok: true });
   }
 
-  if (body?.action !== "ingest") return Response.json({ error: "That Drive action is not available." }, { status: 400 });
+  if (!body || body.action !== "ingest") return Response.json({ error: "That Drive action is not available." }, { status: 400 });
   if (!canEdit(user.role)) return Response.json({ error: "You cannot bring documents in." }, { status: 403 });
-
-  const result = await mutate((db) => {
-    const site = db.sites.find((item) => item.id === body.siteId);
-    if (!site) return { ok: false as const, error: "Choose a website." };
-    const folder = body.folder?.trim() || db.drive.folders[0] || "Incoming";
-    if (!db.drive.folders.includes(folder)) return { ok: false as const, error: "That folder is not on the watch list." };
-    const documentUrl = body.documentUrl?.trim() ?? "";
-    if (documentUrl) {
-      const existing = db.articles.find(
-        (article) => article.documentUrl === documentUrl && article.siteId === site.id && article.status !== "failed",
-      );
-      if (existing) return { ok: false as const, error: `That document is already linked to “${existing.title}”.` };
-    }
-    const created = createArticle(db, {
-      siteId: site.id,
-      title: body.title ?? "",
-      body: body.body ?? "",
-      section: defaultSectionFor(site.id),
-      author: body.author?.trim() || user.name,
-      documentUrl,
-      source: "drive",
-      actor: user,
-      hold: true,
-    });
-    if (!created.ok) return created;
-    const file: DriveFile = {
-      id: randomUUID(),
-      name: created.article.title,
-      folder,
-      targetSiteId: site.id,
-      articleId: created.article.id,
-      state: "detected",
-      addedAt: new Date().toISOString(),
-      addedBy: user.name,
-    };
-    db.drive.files.unshift(file);
-    if (created.article.status === "detected") queueFormatJob(db, created.article.id);
-    runQueuedJobs(db, user.name);
-    file.state = created.article.status === "failed" ? (created.article.duplicateOf ? "duplicate" : "failed") : "processed";
-    const message =
-      created.article.status === "review_required"
-        ? `“${created.article.title}” is in Review Required for ${site.name}. Nothing was sent to the live site.`
-        : created.message;
-    return { ok: true as const, articleId: created.article.id, message };
+  const title = body.title?.trim() ?? "";
+  const text = body.body?.trim() ?? "";
+  const siteId = body.siteId?.trim() ?? "";
+  const intentId = body.intentId?.trim() ?? "";
+  if (!siteId || !intentId || !title || !text) return Response.json({ error: "Choose a website, an intent, a title, and a body." }, { status: 400 });
+  if (title.length > 180) return Response.json({ error: "The title is too long." }, { status: 400 });
+  if (text.length > 100_000) return Response.json({ error: "That document is too long." }, { status: 400 });
+  const snapshot = readDb();
+  const folder = body.folder?.trim() || snapshot.drive.folders[0] || "Incoming";
+  if (!snapshot.drive.folders.includes(folder)) return Response.json({ error: "That folder is not on the watch list." }, { status: 400 });
+  const result = await submitDocument(user, {
+    title,
+    body: text,
+    siteId,
+    intentId,
+    section: body.section?.trim() ?? "",
+    documentUrl: body.documentUrl?.trim() ?? "",
+    author: body.author?.trim() ?? "",
+    folder,
+    source: "drive",
   });
-
   if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
-  return Response.json({ articleId: result.articleId, message: result.message });
+  return Response.json({ articleId: result.articleId, message: result.message, url: result.url });
 }

@@ -6,6 +6,9 @@ import { normalTitle } from "./format";
 import { diagnose, findingSummary } from "./diagnose";
 import type { Probe } from "./types";
 import { applyPlan, type Plan } from "./harness/apply";
+import { redact } from "./harness/redact";
+import { isCodePush } from "./prompt-stage";
+import { prepareCodePush } from "./pull-request";
 
 function step(tool: string, summary: string, ok: boolean): AgentStep {
   return { id: randomUUID(), tool, summary, ok };
@@ -69,16 +72,23 @@ function articlesMatching(db: DB, query: string, siteId?: string | null) {
 }
 
 function remember(db: DB, run: AgentRun) {
-  db.runs.unshift(run);
+  const safe: AgentRun = {
+    ...run,
+    instruction: redact(run.instruction),
+    reply: redact(run.reply),
+    task: redact(run.task || run.instruction),
+    steps: run.steps.map((item) => ({ ...item, summary: redact(item.summary) })),
+  };
+  db.runs.unshift(safe);
   db.runs = db.runs.slice(0, 40);
   addLog(db, {
     kind: "agent",
-    actor: run.actor,
+    actor: safe.actor,
     action: "Instruction",
-    target: run.instruction.slice(0, 80),
-    detail: run.reply,
+    target: safe.instruction.slice(0, 80),
+    detail: safe.reply,
   });
-  return run;
+  return safe;
 }
 
 export function instructionNeedsProbe(instruction: string) {
@@ -104,8 +114,31 @@ export function recordProbes(db: DB, probes: Probe[], actor: string) {
   });
 }
 
+export function recordAgentRun(db: DB, instruction: string, actor: PublicUser, reply: string, steps: AgentStep[], task = instruction) {
+  const run: AgentRun = {
+    id: randomUUID(),
+    at: new Date().toISOString(),
+    actor: actor.name,
+    actorId: actor.id,
+    instruction,
+    reply,
+    steps,
+    task,
+  };
+  return remember(db, run);
+}
+
 export function executeAgent(db: DB, instruction: string, actor: PublicUser, probes: Probe[] | null, plan: Plan | null = null): AgentRun {
   const text = instruction.trim();
+  if (isCodePush(text)) {
+    const prepared = prepareCodePush(db, text, actor);
+    const steps: AgentStep[] = [step("prompt_stage", prepared.promptOk ? "Prompt sealed for one site." : prepared.error, prepared.promptOk)];
+    if (prepared.promptOk) steps.push(step("open_pull_request", prepared.pull ? "Ready to open a pull request." : prepared.error, Boolean(prepared.pull)));
+    const reply = prepared.pull
+      ? `Prompt sealed for ${prepared.pull.siteId}. A pull request is ready for ${prepared.pull.owner}/${prepared.pull.repo}.`
+      : prepared.error;
+    return recordAgentRun(db, text, actor, reply, steps);
+  }
   if (plan) {
     if (probes) recordProbes(db, probes, actor.name);
     const applied = applyPlan(db, text, actor, probes, plan);
@@ -227,7 +260,7 @@ export function executeAgent(db: DB, instruction: string, actor: PublicUser, pro
     } else {
       const title = extractTitle(text);
       if (!title) {
-        reply = "Include a title in quotes.";
+        reply = "What should the article be about?";
         steps.push(step("create_article", reply, false));
       } else {
         const section = sectionFromText(db, site.id, text);

@@ -34,7 +34,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                 return <RowLink key={article.id} href={`/pipeline/${article.id}`} title={article.title} sub={site?.name} aside={formatWhen(article.updatedAt)} />;
               })
             ) : (
-              <Empty title="No articles" body="Nothing in Brain matches." />
+              <Empty title="Nothing matches" body="Nothing in Brain matches." />
             )}
           </Group>
           <Group title="Logs">

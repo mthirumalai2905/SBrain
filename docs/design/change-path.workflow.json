@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Brain change path",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "work", "label": "Brain" },
+    { "id": "repo", "label": "One repository" },
+    { "id": "ship", "label": "Gates" }
+  ],
+  "groups": [
+    { "id": "site_pack", "label": "This site only", "lane": "work", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "both_green", "label": "Both required", "lane": "ship", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["doc", "brain", "context", "agent", "patch", "pull", "review", "merge", "live"],
+  "nodes": [
+    { "id": "doc", "lane": "work", "col": 0, "type": "external", "label": "Google Doc", "sublabel": "one intent, one site" },
+    { "id": "brain", "lane": "work", "col": 1, "type": "backend", "label": "Brain", "sublabel": "reject 0 or 2 sites" },
+    { "id": "context", "lane": "work", "col": 2, "type": "database", "label": "Context pack", "sublabel": "from that repo", "tag": "read-only" },
+    { "id": "agent", "lane": "work", "col": 3, "type": "backend", "label": "Code agent", "sublabel": "branch brain/*" },
+    { "id": "patch", "lane": "repo", "col": 3, "type": "security", "label": "Patch gate", "sublabel": "allowlist", "tag": "before commit" },
+    { "id": "pull", "lane": "repo", "col": 4, "type": "frontend", "label": "Pull request", "sublabel": "one repo" },
+    { "id": "hold", "lane": "ship", "col": 2, "type": "security", "label": "Hold", "sublabel": "main unchanged", "tag": "fix locally" },
+    { "id": "review", "lane": "ship", "col": 4, "type": "security", "label": "CI + review", "sublabel": "both required", "tag": "blocking" },
+    { "id": "merge", "lane": "ship", "col": 5, "type": "backend", "label": "Squash merge", "sublabel": "main protected" },
+    { "id": "live", "lane": "work", "col": 5, "type": "cloud", "label": "Live", "sublabel": "after approval", "tag": "no agent access" }
+  ],
+  "edges": [
+    { "id": "doc-brain", "from": "doc", "to": "brain" },
+    { "id": "brain-context", "from": "brain", "to": "context", "label": "one site" },
+    { "id": "context-agent", "from": "context", "to": "agent", "label": "read-only" },
+    { "id": "agent-patch", "from": "agent", "to": "patch" },
+    { "id": "patch-pull", "from": "patch", "to": "pull", "label": "in allowlist", "variant": "emphasis" },
+    { "id": "pull-review", "from": "pull", "to": "review" },
+    { "id": "review-merge", "from": "review", "to": "merge", "label": "both green", "variant": "emphasis" },
+    { "id": "merge-live", "from": "merge", "to": "live", "label": "approval row", "variant": "security" },
+    { "id": "patch-hold", "from": "patch", "to": "hold", "label": "reject", "variant": "security", "role": "error" },
+    { "id": "review-hold", "from": "review", "to": "hold", "label": "red", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "One site per run",
+      "items": [
+        "The doc names one intent: article, content edit, or revamp",
+        "Brain mounts only that site's pack: design, routes, components, restrictions.json",
+        "Synx, Real Time Web, Morph Space, and Skalle stay in separate repositories"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What stops a break",
+      "items": [
+        "An empty diff, a second site, or a path outside the allowlist never commits",
+        "Lockfiles, workflows, and secrets fail unless the doc names that path",
+        "A red check or a withheld review leaves the branch open and main unchanged"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Live is a later gate",
+      "items": [
+        "Squash merge runs only when CI and the human review are both green",
+        "The reviewer token can read the diff and cannot push",
+        "Merge does not deploy. The agent has no host login and no publish connector"
+      ]
+    }
+  ]
+}

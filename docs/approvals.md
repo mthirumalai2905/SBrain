@@ -1,7 +1,7 @@
 # Approvals
 
-Nothing here has been approved to touch a live site, a VPS, Google Drive credentials, or a publishing connector.
+Opening a pull request on one site repository is approved. Merging, deploying, a VPS, and Google Drive are not.
 
 | Date | Who | System | Action | Status |
 | --- | --- | --- | --- | --- |
-| — | — | — | — | No live action approved |
+| 2026-11-09 | owner | GitHub | Open one pull request on the repository for the site named in the brief. Do not merge. Do not deploy. | Approved |

@@ -56,7 +56,7 @@ export default async function PipelinePage({ searchParams }: { searchParams: Pro
         })}
         {!db.articles.length ? (
           <Group>
-            <Empty title="The pipeline is empty" body="Articles you draft, or documents you bring in, will move through these statuses." />
+            <Empty title="The pipeline is empty" body="Changes you send, and documents you bring in, move through these statuses." />
           </Group>
         ) : null}
       </div>

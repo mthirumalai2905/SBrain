@@ -71,6 +71,7 @@ export function createArticle(
     source: Article["source"];
     actor: PublicUser;
     hold?: boolean;
+    intent?: string;
   },
 ): { ok: true; article: Article; message: string } | { ok: false; error: string } {
   const title = input.title.trim();
@@ -100,6 +101,7 @@ export function createArticle(
     status: "detected",
     author: input.author.trim() || input.actor.name,
     source: input.source,
+    intent: input.intent,
     documentUrl: input.documentUrl.trim(),
     body,
     publishedUrl: "",

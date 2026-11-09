@@ -26,7 +26,7 @@ export default async function OverviewPage() {
         <article className="widget">
           <p className="widget-kicker">Review</p>
           <p className="widget-value">{waiting.length}</p>
-          <p className="widget-detail">{waiting.length === 1 ? "Article waiting" : "Articles waiting"}</p>
+          <p className="widget-detail">{waiting.length === 1 ? "Change waiting" : "Changes waiting"}</p>
         </article>
         <article className="widget">
           <p className="widget-kicker">Websites</p>
@@ -49,7 +49,7 @@ export default async function OverviewPage() {
           {attention.length ? (
             attention.map((item) => <RowLink key={item.href + item.title} href={item.href} title={item.title} sub={item.sub} />)
           ) : (
-            <Empty title="Nothing needs attention" body="Failed articles and unhealthy public checks will show up here." />
+            <Empty title="Nothing needs attention" body="Failed changes and unhealthy public checks will show up here." />
           )}
         </Group>
         <Group title="Waiting for review">
