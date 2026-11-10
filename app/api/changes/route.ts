@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { submitDocument } from "@/lib/change";
 import { canEdit } from "@/lib/rbac";
+import { workResponse } from "@/lib/work-stream";
 
 export async function POST(request: Request) {
   const user = await getSession();
@@ -22,16 +23,22 @@ export async function POST(request: Request) {
   if (!siteId || !intentId || !title || !text) return Response.json({ error: "Choose a website, an intent, a title, and a body." }, { status: 400 });
   if (title.length > 180) return Response.json({ error: "The title is too long." }, { status: 400 });
   if (text.length > 100_000) return Response.json({ error: "That document is too long." }, { status: 400 });
-  const result = await submitDocument(user, {
-    title,
-    body: text,
-    siteId,
-    intentId,
-    section: body?.section?.trim() ?? "",
-    documentUrl: body?.documentUrl?.trim() ?? "",
-    author: body?.author?.trim() ?? "",
-    source: "manual",
+  return workResponse(async (emit) => {
+    const result = await submitDocument(
+      user,
+      {
+        title,
+        body: text,
+        siteId,
+        intentId,
+        section: body?.section?.trim() ?? "",
+        documentUrl: body?.documentUrl?.trim() ?? "",
+        author: body?.author?.trim() ?? "",
+        source: "manual",
+      },
+      emit,
+    );
+    if (!result.ok) emit({ type: "error", error: result.error });
+    else emit({ type: "done", articleId: result.articleId, message: result.message, url: result.url });
   });
-  if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
-  return Response.json({ articleId: result.articleId, message: result.message, url: result.url });
 }

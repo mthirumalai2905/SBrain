@@ -24,6 +24,8 @@ import { prepareCodePush, raisePullRequest, repoForSite, type PreparedPull } fro
 import { findArticleFile, patchEndingQuestion } from "../../lib/repo-edit";
 import { carriedTask, classifyTask } from "../../lib/turn";
 import { codeArticleChange } from "../../lib/code-agent";
+import { choosePublishPaths } from "../../lib/code-publish";
+import { applyPublish } from "../../lib/patch-agent";
 import type { PublicUser } from "../../lib/types";
 
 const owner: PublicUser = { id: "usr_owner", name: "Owner", email: "owner@brain.local", role: "owner" };
@@ -537,6 +539,64 @@ test("an article pull request edits the website code instead of adding markdown"
   if (journal.ok) assert.equal(journal.files[0]?.path, "lib/blog.ts");
   const morph = codeArticleChange({ siteId: "morph", title: "Note", body: "A note.", design: "", sources: {} });
   assert.equal(morph.ok, false);
+});
+
+test("a website change patches the article code and keeps a source copy", () => {
+  const posts = 'export const posts: Post[] = [\n  {\n    slug: "friend-or-foe",\n  },\n  {\n    slug: "raising-a-superintelligence",\n  },\n];\n';
+  const page = [
+    'import { raisingBlocks, RAISING_SLUG, type ArticleBlock } from "@/lib/raisingArticle";',
+    "const essays: Record<string, ArticleBlock[]> = {",
+    "  [RAISING_SLUG]: raisingBlocks,",
+    "};",
+    "",
+  ].join("\n");
+  const home = 'const featured = [\n  "/news/friend-or-foe",\n  "/news/raising-a-superintelligence",\n];\n';
+  const sitemap = 'import { posts } from "@/lib/posts";\nexport default function sitemap() {\n  return posts.map((post) => post.slug);\n}\n';
+  const tree = ["src/lib/posts.ts", "src/app/news/[slug]/page.tsx", "src/app/page.tsx", "src/app/sitemap.ts", "package.json"];
+  const chosen = choosePublishPaths(tree, "synx", "/news", true);
+  assert.equal(chosen.includes("src/lib/posts.ts"), true);
+  assert.equal(chosen.includes("src/app/sitemap.ts"), true);
+  assert.equal(chosen.includes("package.json"), false);
+  const coded = applyPublish({
+    siteId: "synx",
+    intentId: "article",
+    section: "/news",
+    title: "How AI is a good friend",
+    body: "AI can sit beside people and help them choose.",
+    design: "News articles use /news/{slug}.",
+    author: "Owner",
+    publishing: true,
+    sources: {
+      "src/lib/posts.ts": posts,
+      "src/app/news/[slug]/page.tsx": page,
+      "src/app/page.tsx": home,
+      "src/app/sitemap.ts": sitemap,
+    },
+    now: new Date("2026-11-09T00:00:00Z"),
+  });
+  assert.equal(coded.ok, true);
+  if (!coded.ok) return;
+  assert.equal(coded.files.length >= 4, true);
+  assert.equal(coded.files.some((file) => file.path.endsWith(".md")), true);
+  assert.equal(coded.files.some((file) => file.path.endsWith("Article.ts")), true);
+  assert.equal(coded.files.some((file) => file.path === "src/app/sitemap.ts"), false);
+  assert.match(coded.files.find((file) => file.path === "src/app/page.tsx")?.content ?? "", /how-ai-is-a-good-friend/);
+  assert.match(coded.files.find((file) => file.path === "src/lib/posts.ts")?.content ?? "", /how-ai-is-a-good-friend/);
+  const revamp = applyPublish({
+    siteId: "synx",
+    intentId: "revamp",
+    section: "/who",
+    title: "A quieter page",
+    body: "The tools stay where they are.",
+    design: "Keep the existing theme.",
+    publishing: false,
+    sources: { "src/app/who/page.tsx": "export default function Page() {\n  return (\n    <main>\n      <h1>Who</h1>\n    </main>\n  );\n}\n" },
+  });
+  assert.equal(revamp.ok, true);
+  if (!revamp.ok) return;
+  assert.match(revamp.files.find((file) => file.path.endsWith("page.tsx"))?.content ?? "", /A quieter page/);
+  assert.equal(revamp.files.some((file) => file.path.startsWith("brain/sources/who/")), true);
+  assert.equal(choosePublishPaths(["src/app/who/page.tsx", "src/lib/posts.ts"], "synx", "/who", false).includes("src/lib/posts.ts"), false);
 });
 
 test("github credentials stay out of a partial environment", () => {

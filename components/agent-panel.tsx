@@ -2,10 +2,21 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { SendActivity, type ActivityStep } from "@/components/send-activity";
 import type { AgentRun } from "@/lib/types";
 import { formatWhen } from "@/lib/format";
 
 const prompts = ["Check site health", "What is waiting for review?", "List the websites"];
+const agentLabels = ["Reading the request", "Matching the website", "Preparing the change", "Waiting for the reply"];
+
+function agentSteps(tick: number): ActivityStep[] {
+  const ids = ["read", "code", "patch", "pull"] as const;
+  return ids.map((id, index) => ({
+    id,
+    label: agentLabels[index] ?? "",
+    state: index < tick ? "done" : index === tick ? "active" : "wait",
+  }));
+}
 
 export function AgentPanel({ runs, enabled }: { runs: AgentRun[]; enabled: boolean }) {
   const router = useRouter();
@@ -14,6 +25,7 @@ export function AgentPanel({ runs, enabled }: { runs: AgentRun[]; enabled: boole
   const [pending, setPending] = useState(false);
   const [inflight, setInflight] = useState("");
   const [error, setError] = useState("");
+  const [tick, setTick] = useState(0);
   const ordered = [...runs].reverse();
 
   useEffect(() => {
@@ -25,6 +37,13 @@ export function AgentPanel({ runs, enabled }: { runs: AgentRun[]; enabled: boole
   useEffect(() => {
     if (inflight && runs.some((run) => run.instruction === inflight)) setInflight("");
   }, [runs, inflight]);
+
+  useEffect(() => {
+    if (!pending) return;
+    setTick(0);
+    const timer = window.setInterval(() => setTick((value) => Math.min(value + 1, 3)), 1400);
+    return () => window.clearInterval(timer);
+  }, [pending]);
 
   async function send(instruction: string) {
     const value = instruction.trim();
@@ -90,7 +109,11 @@ export function AgentPanel({ runs, enabled }: { runs: AgentRun[]; enabled: boole
         {inflight ? (
           <div>
             <div className="bubble user">{inflight}</div>
-            <div className="bubble brain">{pending ? "Thinking…" : "Saving the reply…"}</div>
+            {pending ? (
+              <SendActivity siteName="Brain" steps={agentSteps(tick)} note="" files={[]} />
+            ) : (
+              <div className="bubble brain">Saving the reply…</div>
+            )}
           </div>
         ) : null}
       </div>

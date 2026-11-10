@@ -816,3 +816,95 @@ html[data-theme="dark"] .widget {
   .page-header h1 { font-size: 34px; }
 }
 
+.activity {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: inset 0 0 0 0.5px var(--ring);
+}
+.activity-head { display: flex; gap: 12px; align-items: center; }
+.activity-head strong {
+  display: block;
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.41px;
+  font-weight: 600;
+}
+.activity-head p {
+  margin: 2px 0 0;
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: -0.08px;
+}
+.activity-orb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--fill);
+  border-top-color: var(--blue);
+  flex: none;
+  animation: activity-spin 0.8s linear infinite;
+}
+.activity-steps {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.activity-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: -0.24px;
+  color: var(--tertiary);
+}
+.activity-step.active { color: var(--label); font-weight: 600; }
+.activity-step.done { color: var(--secondary); font-weight: 400; }
+.activity-mark {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fill);
+  flex: none;
+}
+.activity-step.active .activity-mark {
+  background: var(--blue);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 22%, transparent);
+  animation: activity-pulse 1.2s ease infinite;
+}
+.activity-step.done .activity-mark { background: var(--green); }
+.activity-files { margin-top: 14px; }
+.activity-files p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--secondary);
+}
+.activity-files ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.activity-files li {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--label);
+  animation: activity-in 0.35s ease;
+}
+@keyframes activity-spin { to { transform: rotate(360deg); } }
+@keyframes activity-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 18%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--blue) 8%, transparent); }
+}
+@keyframes activity-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .activity-orb,
+  .activity-step.active .activity-mark,
+  .activity-files li { animation: none; }
+}
+

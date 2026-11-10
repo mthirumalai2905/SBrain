@@ -12,6 +12,8 @@ export interface ArticleDraft {
   design: string;
   sources: Record<string, string>;
   now?: Date;
+  author?: string;
+  section?: string;
 }
 
 const boilerplate = new Set([
@@ -31,7 +33,7 @@ function insertAfter(source: string, marker: string, block: string) {
   return `${source.slice(0, end)}${nl}${block}${source.slice(end)}`;
 }
 
-function paragraphs(title: string, body: string) {
+export function visibleParagraphs(title: string, body: string) {
   const titleKey = title.trim().toLowerCase();
   const rows = body
     .replace(/^#\s+.*(?:\r?\n)+/, "")
@@ -78,7 +80,7 @@ export function codeArticleChange(input: ArticleDraft): { ok: true; files: CodeF
   const body = input.body.trim();
   if (!title || !body) return { ok: false, error: "A published article needs a title and a body. The pull request stays closed." };
   const slug = slugify(title);
-  const rows = paragraphs(title, body);
+  const rows = visibleParagraphs(title, body);
   const when = stamp(input.now ?? new Date());
   if (input.siteId === "synx") return synx(input, slug, rows, when.when);
   if (input.siteId === "realtimeweb") return realtime(input, slug, rows, when.iso);
@@ -99,7 +101,7 @@ function synx(input: ArticleDraft, slug: string, rows: string[], when: string): 
   const post = [
     "  {",
     `    slug: ${JSON.stringify(slug)},`,
-    `    name: "Brain",`,
+    `    name: ${JSON.stringify(input.author?.trim() || "Brain")},`,
     `    source: "Synx",`,
     `    category: "Articles",`,
     `    href: ${JSON.stringify(`/news/${slug}`)},`,
@@ -168,8 +170,17 @@ function realtime(input: ArticleDraft, slug: string, rows: string[], date: strin
 }
 
 function skalle(input: ArticleDraft, slug: string, rows: string[], date: string): { ok: true; files: CodeFile[] } | { ok: false; error: string } {
-  const articles = input.sources["src/content/articles.ts"] ?? "";
-  if (!articles) return { ok: false, error: "Skalle's article file could not be read. The pull request stays closed." };
+  const chronicle = /chronicle/i.test(input.section ?? "");
+  const path = chronicle ? "src/content/chronicles.ts" : "src/content/articles.ts";
+  const articles = input.sources[path] ?? "";
+  if (!articles) {
+    return {
+      ok: false,
+      error: chronicle
+        ? "Skalle's chronicle file could not be read. The pull request stays closed."
+        : "Skalle's article file could not be read. The pull request stays closed.",
+    };
+  }
   if (hasSlug(articles, slug)) return { ok: false, error: `Skalle already has an article slug “${slug}”. The pull request stays closed.` };
   const body = rows.map((text) => `      { type: "p", text: ${JSON.stringify(text)} },`).join(newline(articles));
   const article = [
@@ -178,7 +189,7 @@ function skalle(input: ArticleDraft, slug: string, rows: string[], date: string)
     `    section: "Field notes",`,
     `    title: ${JSON.stringify(input.title.trim())},`,
     `    dek: ${JSON.stringify(dek(rows))},`,
-    `    byline: "Brain",`,
+    `    byline: ${JSON.stringify(input.author?.trim() || "Brain")},`,
     `    date: ${JSON.stringify(date)},`,
     `    minutes: ${minutes(rows)},`,
     `    image: "/times/wait-robots.jpg",`,
@@ -189,7 +200,21 @@ function skalle(input: ArticleDraft, slug: string, rows: string[], date: string)
     "    ],",
     "  },",
   ].join(newline(articles));
-  const next = insertAfter(articles, "export const articles: Article[] = [", `${promptLine(input.design)}${newline(articles)}${article}`);
-  if (!next) return { ok: false, error: "Skalle's article pattern has changed. The pull request stays closed." };
-  return { ok: true, files: [{ path: "src/content/articles.ts", content: next }] };
+  const markers = chronicle
+    ? ["export const chronicles: Chronicle[] = [", "export const chronicles = ["]
+    : ["export const articles: Article[] = ["];
+  let next = "";
+  for (const marker of markers) {
+    next = insertAfter(articles, marker, `${promptLine(input.design)}${newline(articles)}${article}`);
+    if (next) break;
+  }
+  if (!next) {
+    return {
+      ok: false,
+      error: chronicle
+        ? "Skalle's chronicle pattern has changed. The pull request stays closed."
+        : "Skalle's article pattern has changed. The pull request stays closed.",
+    };
+  }
+  return { ok: true, files: [{ path, content: next }] };
 }

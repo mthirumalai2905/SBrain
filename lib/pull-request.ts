@@ -93,7 +93,7 @@ export function filesFromBrief(brief: string, allowedPaths: string[]) {
   if (!files.length) {
     return { ok: false as const, missing: true as const, error: "Name each repository file as `file: path/in/repo` followed by a fenced block. The pull request stays closed." };
   }
-  if (files.length > 8) return { ok: false as const, missing: false as const, error: "A pull request can carry at most eight files." };
+  if (files.length > 12) return { ok: false as const, missing: false as const, error: "A pull request can carry at most twelve files." };
   return { ok: true as const, files };
 }
 
@@ -107,7 +107,7 @@ function suppliedFiles(files: PullFile[] | undefined) {
     if (file.content.length > 200_000) return { ok: false as const, missing: false as const, error: "A named file is too large. The pull request stays closed." };
     safe.push({ path: filePath, content: file.content.replace(/\s+$/, "") });
   }
-  if (safe.length > 8) return { ok: false as const, missing: false as const, error: "A pull request can carry at most eight files." };
+  if (safe.length > 12) return { ok: false as const, missing: false as const, error: "A pull request can carry at most twelve files." };
   return { ok: true as const, files: safe };
 }
 
@@ -134,6 +134,7 @@ export function prepareCodePush(
     document?: { title: string; body: string; section?: string };
     files?: PullFile[];
     title?: string;
+    section?: string;
   },
 ): CodePushPlan {
   const sealed = stageCodePush(db, brief, actor, { siteId: options?.siteId, intentId: options?.intentId });
@@ -163,11 +164,19 @@ export function prepareCodePush(
     return { promptOk: true, error: "The GitHub App id, installation id, or private key is missing. The pull request stays closed.", pull: null };
   }
   const title = options?.title?.trim() || titleFrom(brief, files.files[0]?.path ?? "change");
-  const pull = renderPull(sealed.value, repo, files.files, title, brief, approval.id);
+  const pull = renderPull(sealed.value, repo, files.files, title, brief, approval.id, options?.section);
   return { promptOk: true, error: "", pull };
 }
 
-function renderPull(seal: PromptSeal, repo: { owner: string; name: string }, files: PullFile[], title: string, brief: string, approvalId: string): PreparedPull {
+function renderPull(
+  seal: PromptSeal,
+  repo: { owner: string; name: string },
+  files: PullFile[],
+  title: string,
+  brief: string,
+  approvalId: string,
+  sectionOverride?: string,
+): PreparedPull {
   const branch = `brain/${randomUUID().slice(0, 8)}`;
   const body = [
     `Site: ${seal.siteId}`,
@@ -188,7 +197,7 @@ function renderPull(seal: PromptSeal, repo: { owner: string; name: string }, fil
     branch,
     title: title.slice(0, 120),
     body,
-    section: sectionFor(files, seal.allowedPaths),
+    section: sectionOverride?.trim() || sectionFor(files, seal.allowedPaths),
     files,
     approvalId,
   };

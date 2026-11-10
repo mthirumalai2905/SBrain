@@ -137,6 +137,10 @@ export async function POST(request: Request) {
         title: copy.title,
         body: copy.body,
         design: site?.formatting ?? "",
+        section: publishingSection(turn.siteId),
+        intentId: "article",
+        author: user.name,
+        publishing: true,
       });
       if (!coded.ok) return ask(coded.error);
       const prepared = prepareCodePush(snapshot, carried.task, user, {

@@ -1,10 +1,12 @@
 import { randomUUID } from "crypto";
+import { articleCodeFiles } from "./code-publish";
 import type { AuditActor, AuditStatus } from "./harness/log";
 import { githubHost } from "./github";
 import { prepareCodePush, pullAuditLine, raisePullRequest, type CodePushPlan, type GitHost, type PreparedPull } from "./pull-request";
 import { mutate, readDb } from "./store";
 import type { DB, PublicUser } from "./types";
-import { addLog, createArticle } from "./workflow";
+import type { WorkEvent } from "./work-events";
+import { addLog, createArticle, siteById } from "./workflow";
 
 export function documentBrief(input: { title: string; body: string; documentUrl?: string }) {
   const title = input.title.trim().replace(/[“”"]/g, "");
@@ -12,18 +14,6 @@ export function documentBrief(input: { title: string; body: string; documentUrl?
   if (input.documentUrl?.trim()) lines.push(`Document: ${input.documentUrl.trim()}`);
   lines.push("", input.body.trim());
   return lines.join("\n");
-}
-
-export function prepareDocument(
-  db: DB,
-  actor: PublicUser,
-  input: { title: string; body: string; siteId: string; intentId: string; section?: string; documentUrl?: string },
-) {
-  return prepareCodePush(db, documentBrief(input), actor, {
-    siteId: input.siteId,
-    intentId: input.intentId,
-    document: { title: input.title, body: input.body, section: input.section },
-  });
 }
 
 export function documentAlreadyUsed(db: DB, siteId: string, documentUrl: string) {
@@ -113,18 +103,77 @@ export async function submitDocument(
     folder?: string;
     source: "drive" | "manual";
   },
+  emit?: (event: WorkEvent) => void,
 ) {
   const snapshot = readDb();
   const duplicate = documentAlreadyUsed(snapshot, input.siteId, input.documentUrl ?? "");
   if (duplicate) return { ok: false as const, error: `That document is already linked to “${duplicate.title}”.` };
-  const prepared = prepareDocument(snapshot, actor, input);
+  const site = siteById(snapshot, input.siteId);
+  const section = site?.sections.find((item) => item.path === input.section);
+  const publishing = input.intentId === "article" || section?.kind === "news" || section?.kind === "journal";
+  const siteName = site?.name ?? "this website";
+  emit?.({ type: "step", id: "read", label: `Reading how ${siteName} publishes this`, state: "active" });
+  const coded = await articleCodeFiles(
+    process.env,
+    {
+      siteId: input.siteId,
+      title: input.title,
+      body: input.body,
+      design: site?.formatting ?? "",
+      section: input.section,
+      intentId: input.intentId,
+      author: input.author?.trim() || actor.name,
+      publishing,
+    },
+    fetch,
+    undefined,
+    {
+      note: (text) => emit?.({ type: "note", text }),
+      read: (path) => emit?.({ type: "file", path, action: "read" }),
+      patch: (path) => emit?.({ type: "file", path, action: "patch" }),
+    },
+  );
+  emit?.({ type: "step", id: "read", label: `Reading how ${siteName} publishes this`, state: "done" });
+  emit?.({ type: "step", id: "code", label: "Code agent matched the existing files", state: coded.ok ? "done" : "active" });
+  if (!coded.ok) {
+    emit?.({ type: "step", id: "patch", label: "Patch agent stopped before opening a pull request", state: "active" });
+    const started = Date.now();
+    await mutate((db) => {
+      noteChange(db, {
+        site: input.siteId,
+        status: "failed",
+        result: coded.error,
+        error: coded.error,
+        approvalId: null,
+        started,
+        actor: "human",
+        kind: input.source === "drive" ? "drive" : "content",
+      });
+      return null;
+    });
+    return { ok: false as const, error: coded.error };
+  }
+  emit?.({ type: "step", id: "patch", label: `Patch agent wrote ${coded.files.length} files`, state: "done" });
+  const brief = [
+    documentBrief(input),
+    "",
+    "The markdown file is the source copy. The website change is in the code files.",
+  ].join("\n");
+  const prepared = prepareCodePush(snapshot, brief, actor, {
+    siteId: input.siteId,
+    intentId: input.intentId,
+    title: input.title,
+    section: input.section,
+    files: coded.files,
+  });
+  emit?.({ type: "step", id: "pull", label: "Opening the pull request", state: "active" });
   const started = Date.now();
   const result = await runChange(prepared, prepared.pull ? githubHost() : null);
-  const site = (result.ok ? result.pull.siteId : result.pull?.siteId) ?? input.siteId;
+  const changedSite = (result.ok ? result.pull.siteId : result.pull?.siteId) ?? input.siteId;
   const approvalId = (result.ok ? result.pull.approvalId : result.pull?.approvalId) ?? null;
   if (!result.ok) {
     await mutate((db) => {
-      noteChange(db, { site, status: result.status, result: result.error, error: result.error, approvalId, started, actor: "human", kind: input.source === "drive" ? "drive" : "content" });
+      noteChange(db, { site: changedSite, status: result.status, result: result.error, error: result.error, approvalId, started, actor: "human", kind: input.source === "drive" ? "drive" : "content" });
       if (input.folder) {
         db.drive.files.unshift({
           id: randomUUID(),
@@ -152,5 +201,6 @@ export async function submitDocument(
       folder: input.folder,
     });
   });
+  emit?.({ type: "step", id: "pull", label: "Opening the pull request", state: "done" });
   return { ok: true as const, url: result.url, articleId: saved.articleId, message: saved.message };
 }

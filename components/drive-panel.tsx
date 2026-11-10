@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { SendActivity, useSendWork } from "@/components/send-activity";
 import type { IntentChoice } from "@/lib/intents";
 import type { Site } from "@/lib/types";
 
@@ -27,7 +28,7 @@ export function DrivePanel({
   const [body, setBody] = useState("");
   const [folderName, setFolderName] = useState("");
   const [error, setError] = useState("");
-  const [pending, setPending] = useState(false);
+  const work = useSendWork(sites.find((site) => site.id === siteId)?.name ?? "this website");
   const paths = intents.find((intent) => intent.id === intentId)?.paths.filter((path) => path.siteId === siteId) ?? [];
 
   function chooseSite(id: string) {
@@ -44,21 +45,11 @@ export function DrivePanel({
 
   async function ingest(event: FormEvent) {
     event.preventDefault();
-    setPending(true);
-    setError("");
-    const res = await fetch("/api/drive", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "ingest", folder, siteId, intentId, section, title, author, documentUrl, body }),
-    });
-    const data = (await res.json()) as { error?: string; articleId?: string };
-    setPending(false);
+    const siteName = sites.find((site) => site.id === siteId)?.name ?? "this website";
+    const done = await work.run("/api/drive", { action: "ingest", folder, siteId, intentId, section, title, author, documentUrl, body }, siteName);
     router.refresh();
-    if (!res.ok) {
-      setError(data.error ?? "The document was not brought in.");
-      return;
-    }
-    if (data.articleId) router.push(`/pipeline/${data.articleId}`);
+    if (!done) return;
+    if (done.articleId) router.push(`/pipeline/${done.articleId}`);
     router.refresh();
   }
 
@@ -143,8 +134,9 @@ export function DrivePanel({
           <textarea className="textarea" value={body} placeholder="Paste the document text" onChange={(event) => setBody(event.target.value)} required />
         </div>
         {intentId && !paths.length ? <p className="error-text">This intent has no path on this website.</p> : null}
-        <button className="btn btn-fill" disabled={pending || !intentId || !paths.length} type="submit" style={{ width: "max-content" }}>
-          {pending ? "Sending" : "Send"}
+        {work.pending || work.steps.length ? <SendActivity siteName={sites.find((site) => site.id === siteId)?.name ?? "this website"} steps={work.steps} note={work.note} files={work.files} /> : null}
+        <button className="btn btn-fill" disabled={work.pending || !intentId || !paths.length} type="submit" style={{ width: "max-content" }}>
+          {work.pending ? "Sending" : "Send"}
         </button>
       </form>
       <form onSubmit={addFolder}>
@@ -162,7 +154,7 @@ export function DrivePanel({
         </div>
         <p className="group-footer">Folder names are kept in Brain. Google Drive is not connected, so nothing is polled on Google’s side.</p>
       </form>
-      {error ? <p className="error-text">{error}</p> : null}
+      {work.error || error ? <p className="error-text">{work.error || error}</p> : null}
     </div>
   );
 }
