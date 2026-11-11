@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { requireSite } from '../auth.js';
 import { validateData, type Field } from '../fields.js';
+import { actorOf, recordChange } from '../activity.js';
 
 const sectionSchema = z.array(z.object({ id: z.string().min(1), type: z.string().min(1), data: z.record(z.unknown()) })).max(200);
 
@@ -67,6 +68,7 @@ export default async function (app: FastifyInstance) {
         publishedAt: b.status === 'PUBLISHED' ? new Date() : null,
       },
     });
+    await recordChange({ entry, actor: await actorOf(req) });
     return reply.code(201).send(entry);
   });
 
@@ -77,7 +79,7 @@ export default async function (app: FastifyInstance) {
     if (!existing) return reply.code(404).send({ error: 'Not found' });
     const v = await prepare(siteId, existing.contentType, b.data);
     if (v.errors.length) return reply.code(422).send({ error: v.errors.join('; '), details: v.errors });
-    return prisma.entry.update({
+    const updated = await prisma.entry.update({
       where: { id },
       data: {
         slug: b.slug || null,
@@ -86,11 +88,15 @@ export default async function (app: FastifyInstance) {
         publishedAt: b.status === 'PUBLISHED' ? existing.publishedAt ?? new Date() : null,
       },
     });
+    await recordChange({ entry: updated, before: existing, actor: await actorOf(req) });
+    return updated;
   });
 
   app.delete('/sites/:siteId/entries/:id', { preHandler: requireSite('EDITOR') }, async (req, reply) => {
     const { siteId, id } = req.params as { siteId: string; id: string };
+    const gone = await prisma.entry.findFirst({ where: { id, siteId } });
     await prisma.entry.deleteMany({ where: { id, siteId } });
+    if (gone) await recordChange({ entry: gone, action: 'deleted', actor: await actorOf(req) });
     return reply.code(204).send();
   });
 }

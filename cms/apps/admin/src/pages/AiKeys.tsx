@@ -3,7 +3,8 @@ import { api, type Site } from '../api';
 import { ask } from '../lib/confirm';
 
 interface KeyInfo {
-  provider: 'anthropic' | 'openai' | 'gemini'; label: string; source: 'settings' | 'env' | 'none';
+  provider: 'anthropic' | 'openai' | 'gemini'; label: string; source: 'settings' | 'shared' | 'env' | 'none';
+  from?: string; sharedWith: number;
   hint?: string; model: string; defaultModel: string; keyEnv: string; modelCustom: boolean;
 }
 interface Result { ok: boolean; message: string }
@@ -40,7 +41,8 @@ function KeyCard({ site, info, onChange }: { site: Site; info: KeyInfo; onChange
     setBusy('');
   }
   async function remove() {
-    if (!(await ask({ title: `Remove the ${info.label} key?`, message: 'The assistant will stop using this model until a key is added again.', confirmLabel: 'Remove key' }))) return;
+    const others = info.sharedWith > 0 ? ` ${info.sharedWith} other site${info.sharedWith === 1 ? '' : 's'} use${info.sharedWith === 1 ? 's' : ''} this key too, so ${info.sharedWith === 1 ? 'it loses' : 'they lose'} it as well.` : '';
+    if (!(await ask({ title: `Remove the ${info.label} key?`, message: `The assistant will stop using this model until a key is added again.${others}`, confirmLabel: 'Remove key' }))) return;
     await api(base, { method: 'DELETE' });
     setKey(''); setModel(''); setResult(null);
     await onChange();
@@ -53,7 +55,7 @@ function KeyCard({ site, info, onChange }: { site: Site; info: KeyInfo; onChange
         <span className={`key-badge ${info.provider}`} aria-hidden>{info.label[0]}</span>
         <div className="key-name">
           <b>{info.label}</b>
-          <small>{info.source === 'settings' ? `Key saved ${info.hint}` : info.source === 'env' ? `Key from apps/api/.env ${info.hint}` : 'No key yet'}</small>
+          <small>{info.source === 'settings' ? `Key saved ${info.hint}${info.sharedWith > 0 ? ` · used by all ${info.sharedWith + 1} sites` : ''}` : info.source === 'shared' ? `Shared key ${info.hint} from ${info.from}` : info.source === 'env' ? `Key from apps/api/.env ${info.hint}` : 'No key yet'}</small>
         </div>
         <span className={`status-pill ${ready ? 'on' : ''}`}>{ready ? 'Ready' : 'Not set up'}</span>
       </div>
@@ -68,6 +70,7 @@ function KeyCard({ site, info, onChange }: { site: Site; info: KeyInfo; onChange
           <input placeholder={info.defaultModel} spellCheck={false} value={model} onChange={(e) => { setModel(e.target.value); setResult(null); }} />
         </label>
       </div>
+      {info.source === 'shared' && <p className="muted key-note">This site uses the key saved on {info.from}, so you only add it once. Paste a different key here to use it for this site only.</p>}
       {info.source === 'env' && <p className="muted key-note">This key comes from <code>{info.keyEnv}</code> in <code>apps/api/.env</code>. A key saved here is used instead.</p>}
 
       <div className="key-actions">

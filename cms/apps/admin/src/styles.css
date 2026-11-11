@@ -510,3 +510,76 @@ button.danger-btn:hover { background: #da3633; border-color: #da3633; }
   .set-nav button small { display: none; }
   .key-fields { grid-template-columns: 1fr; }
 }
+
+.ag-switch { align-self: center; max-width: 92%; padding: 5px 12px; font-size: 12px; line-height: 1.4; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 999px; animation: ag-in .28s ease-out both; }
+
+/* Settings › Connect Claude (pages/ClaudeConnect.tsx) */
+.cc-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+.cc-perm { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; max-width: 620px; }
+.cc-perm label { display: flex; gap: 10px; align-items: flex-start; padding: 12px; cursor: pointer; border: 1px solid var(--line); border-radius: 12px; }
+.cc-perm label.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.cc-perm input { flex: none; width: auto; margin-top: 3px; }
+.cc-perm b { display: block; font-size: 14px; }
+.cc-perm small { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.cc-fresh { margin: 16px 0; padding: 14px; border: 1px solid color-mix(in srgb, var(--ok) 50%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--ok) 8%, transparent); }
+.cc-fresh p { margin: 6px 0 0; }
+.copy-block { margin: 10px 0 14px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.copy-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; font-size: 13px; background: rgba(255, 255, 255, .03); border-bottom: 1px solid var(--line); }
+.copy-block pre { margin: 0; padding: 12px; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; }
+.cc-try { margin: 6px 0 10px; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+
+.cc-warn { margin: 0 0 14px; padding: 12px 14px; max-width: 620px; font-size: 13px; line-height: 1.5; border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--warn) 8%, transparent); }
+.cc-warn p { margin: 6px 0 0; }
+
+/* Shown while the API is not answering (start-up or restart), instead of a sign-in form */
+.boot { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.boot-card { width: min(420px, 100%); padding: 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; }
+.boot-card p { margin: 0; font-size: 14px; line-height: 1.5; }
+.boot-hint { font-size: 12.5px; }
+.boot-spin { width: 28px; height: 28px; margin-bottom: 6px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: boot-spin .9s linear infinite; }
+@keyframes boot-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .boot-spin { animation: none; } }
+
+/* Settings › Connect AI tools (pages/AiToolsConnect.tsx) */
+.ai-tools h4 { margin: 20px 0 8px; font-size: 14px; }
+.tk-public { margin-bottom: 8px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
+.tk-public label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.tk-public details { margin-top: 8px; }
+.tk-public summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+.tk-public pre { margin: 8px 0; }
+.tk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.tk { padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
+.tk-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.tk-head select { width: auto; padding: 4px 8px; font-size: 12px; }
+.tk .key-line code { flex: 1 1 240px; }
+.tk-setup { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.tk-setup p { margin: 0 0 8px; }
+.tk-steps { margin: 8px 0 12px; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+.tk-details { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.tk-field { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.tk-field span { font-size: 12px; font-weight: 600; color: var(--muted); }
+.tk-field code { min-width: 0; overflow-wrap: anywhere; font-size: 12.5px; }
+.tk-add { max-width: 320px; margin-bottom: 10px; }
+.tk-add label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--muted); }
+@media (max-width: 700px) { .tk-field { grid-template-columns: 1fr auto; } .tk-field span { grid-column: 1 / -1; } }
+
+/* Notifications bell (pages/NotificationsBell.tsx) and version history (pages/History.tsx) */
+.bell { position: relative; }
+.bell-btn { position: relative; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border-radius: 8px; color: var(--muted); }
+.bell-btn:hover, .bell-btn.on { color: var(--ink); }
+.bell-badge { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 600; line-height: 17px; text-align: center; }
+.bell-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: min(380px, calc(100vw - 24px)); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,.6); }
+.bell-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.bell-list { list-style: none; margin: 0; padding: 0; max-height: min(60vh, 420px); overflow-y: auto; }
+.bell-list li { display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.bell-list li.new { background: color-mix(in srgb, var(--accent) 9%, transparent); box-shadow: inset 3px 0 0 var(--accent); }
+.bell-list .bell-empty { padding: 18px 14px; }
+.bell-ai { margin-left: 6px; padding: 0 7px; font-size: 11px; }
+.bell-foot { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; font-size: 12.5px; }
+.bell-foot label.check { display: flex; align-items: center; gap: 8px; }
+.dialog.history { width: min(560px, 100%); }
+.hist-note { margin: 4px 16px 8px; font-size: 13px; }
+.hist-list { list-style: none; margin: 0; padding: 0 8px 12px; overflow-y: auto; }
+.hist-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+.hist-main { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.hist-main small { flex-basis: 100%; }

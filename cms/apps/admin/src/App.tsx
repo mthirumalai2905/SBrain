@@ -6,6 +6,7 @@ import { LivePreview } from './pages/LivePreview';
 import { Types } from './pages/Types';
 import { MediaLibrary } from './pages/MediaLibrary';
 import { Settings } from './pages/Settings';
+import { NotificationsBell } from './pages/NotificationsBell';
 
 type View = 'structure' | 'preview' | 'media' | 'types' | 'settings';
 const MAIN: { id: View; label: string }[] = [
@@ -21,6 +22,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [authOff, setAuthOff] = useState(false);
+  const [down, setDown] = useState(false); // the API is not answering (for example it is restarting)
   const [sites, setSites] = useState<Site[]>([]);
   const [siteId, setSiteId] = useState(localStorage.getItem('cms_site_v2') ?? '');
   const [view, setView] = useState<View>('structure');
@@ -32,15 +34,32 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // With AUTH_DISABLED on the API there is no sign-in; otherwise resume a saved session if there is one.
-    api<{ authDisabled?: boolean }>('/auth/status')
-      .then((st) => {
+    // With AUTH_DISABLED on the API there is no sign-in at all. If the API is not answering yet (it restarts when the
+    // server code changes), wait and try again instead of showing a sign-in form. The sign-in form is only shown when
+    // the API itself says sign-in is required.
+    let stopped = false;
+    const start = async () => {
+      try {
+        const st = await api<{ authDisabled?: boolean }>('/auth/status');
+        if (stopped) return;
         setAuthOff(!!st.authDisabled);
-        if (!st.authDisabled && !getToken()) return;
-        return api<User>('/auth/me').then(setUser).then(loadSites);
-      })
-      .catch(() => {})
-      .finally(() => setReady(true));
+        if (st.authDisabled || getToken()) {
+          const me = await api<User>('/auth/me');
+          if (stopped) return;
+          setUser(me);
+          await loadSites();
+        }
+        if (stopped) return;
+        setDown(false);
+        setReady(true);
+      } catch {
+        if (stopped) return;
+        setDown(true);
+        setTimeout(start, 2000);
+      }
+    };
+    start();
+    return () => { stopped = true; };
   }, [loadSites]);
 
   useEffect(() => { localStorage.setItem('cms_site_v2', siteId); }, [siteId]);
@@ -55,7 +74,18 @@ export default function App() {
     return () => { window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); clearInterval(timer); };
   }, [user, loadSites]);
 
-  if (!ready) return null;
+  if (!ready) {
+    return down ? (
+      <div className="boot" role="status">
+        <div className="boot-card">
+          <span className="boot-spin" aria-hidden />
+          <b>Waiting for the CMS server…</b>
+          <p className="muted">It is starting up or restarting. This page opens by itself as soon as it answers.</p>
+          <p className="muted boot-hint">If it stays here, start it with <code>npm run dev</code> in the <code>cms</code> folder.</p>
+        </div>
+      </div>
+    ) : null;
+  }
   if (!user) {
     return <Login onDone={(u) => { setUser(u); setReady(true); loadSites(); }} />;
   }
@@ -80,6 +110,7 @@ export default function App() {
         <nav className="tabs minor">
           {MORE.map((t) => <button key={t.id} className={view === t.id ? 'on' : ''} onClick={() => setView(t.id)}>{t.label}</button>)}
         </nav>
+        {site && <NotificationsBell key={site.id} site={site} />}
         <span className="me">
           {user.name}
           {authOff ? <span className="muted"> · sign-in off</span> : <button className="link" onClick={() => { setToken(null); location.reload(); }}>Sign out</button>}

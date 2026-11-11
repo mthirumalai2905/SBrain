@@ -6,6 +6,7 @@ import { PageBuilder } from './PageBuilder';
 import { AgentPanel, type Applied, type Proposal } from './AgentPanel';
 import { applyProposalTo, useAiOpen } from '../lib/assistant';
 import { Chevron, iconFor } from './Icons';
+import { History } from './History';
 
 type Status = 'DRAFT' | 'PUBLISHED';
 type Draft = Partial<Entry> & { contentTypeId: string };
@@ -30,6 +31,7 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
   const [view, setView] = useState<View | null>(null);
   const [sel, setSel] = useState<Draft | null>(null); // selected document of a list
   const [filter, setFilter] = useState<'ALL' | Status>('ALL');
+  const [rk, setRk] = useState(0); // bumped after a restore so the editor reloads the restored content
   const base = `/sites/${site.id}`;
 
   const reload = async () => { const list = await api<Entry[]>(`${base}/entries`); setEntries(list); return list; };
@@ -116,11 +118,12 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
 
       {pageType && (view?.t === 'page' || view?.t === 'new-page') && (
         <PageBuilder
-          key={view.t === 'page' ? view.id : 'new-page'}
+          key={(view.t === 'page' ? view.id : 'new-page') + ':' + rk}
           site={site} type={pageType} sectionTypes={sectionTypes} canEdit={canEdit}
           entry={pageEntry ?? { contentTypeId: pageType.id, data: {}, status: 'DRAFT' }}
           onSaved={async (saved) => { await reload(); setView({ t: 'page', id: saved.id }); }}
           onDeleted={async () => { const list = await reload(); const next = list.find((e) => pageTypes.some((t) => t.id === e.contentTypeId)); setView(next ? { t: 'page', id: next.id } : null); }}
+          onRestored={async () => { await reload(); setRk((k) => k + 1); }}
         />
       )}
 
@@ -152,10 +155,11 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
         <section className="pane pane-editor">
           {sel ? (
             <Editor
-              key={(sel.id ?? 'new') + activeType.id}
+              key={(sel.id ?? 'new') + activeType.id + ':' + rk}
               site={site} type={activeType} entry={sel} canEdit={canEdit}
               onSaved={async (saved) => { await reload(); setSel(saved); }}
               onDeleted={async () => { await reload(); setSel(null); }}
+              onRestored={async (e) => { await reload(); setSel(e); setRk((k) => k + 1); }}
             />
           ) : (
             <p className="muted pad">{isList ? 'Select a document, or create a new one.' : ''}</p>
@@ -168,10 +172,11 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
   );
 }
 
-function Editor({ site, type, entry, canEdit, onSaved, onDeleted }: {
+function Editor({ site, type, entry, canEdit, onSaved, onDeleted, onRestored }: {
   site: Site; type: ContentType; entry: Draft; canEdit: boolean;
-  onSaved: (e: Entry) => void; onDeleted: () => void;
+  onSaved: (e: Entry) => void; onDeleted: () => void; onRestored: (e: Entry) => void;
 }) {
+  const [showHistory, setShowHistory] = useState(false);
   const [data, setData] = useState<Record<string, unknown>>(entry.data ?? {});
   const [slug, setSlug] = useState(entry.slug ?? '');
   const [status, setStatus] = useState<Status>(entry.status ?? 'DRAFT');
@@ -231,6 +236,7 @@ function Editor({ site, type, entry, canEdit, onSaved, onDeleted }: {
         </div>
         <div className="grow" />
         {canEdit && <button className={`ai-toggle${aiOpen ? ' on' : ''}`} aria-pressed={aiOpen} onClick={toggleAi}>✦ AI assistant</button>}
+        {entry.id && <button className="link" onClick={() => setShowHistory(true)}>History</button>}
         {canEdit && entry.id && !single && <button className="link delete-link" onClick={async () => { if (await ask({ title: 'Delete this document?', message: 'It is removed permanently and cannot be undone.', confirmLabel: 'Delete' })) { await api(`${base}/${entry.id}`, { method: 'DELETE' }); onDeleted(); } }}>Delete</button>}
         {canEdit && dirty && !saving && <span className="muted">Unsaved changes</span>}
         {canEdit && <button disabled={saving || !dirty} onClick={() => save()}>{saving ? 'Saving…' : 'Save'}</button>}
@@ -238,6 +244,7 @@ function Editor({ site, type, entry, canEdit, onSaved, onDeleted }: {
       </header>
       <div className="editor-scroll">{form}</div>
     </div>
+    {showHistory && entry.id && <History site={site} entryId={entry.id} name={heading} canEdit={canEdit} onClose={() => setShowHistory(false)} onRestored={onRestored} />}
     {canEdit && (
       <aside className="ai-drawer" hidden={!aiOpen}>
         <AgentPanel site={site} typeSlug={type.slug} active={aiOpen} onClose={toggleAi} apply={applyProposal} onPublish={publish}

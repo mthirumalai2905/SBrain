@@ -40,6 +40,7 @@ model Site {
   entries      Entry[]
   media        Media[]
   connectors   Connector[]
+  mcpKeys      McpKey[]
   createdAt    DateTime      @default(now())
 }
 
@@ -47,6 +48,8 @@ model Membership {
   userId String
   siteId String
   role   Role   @default(EDITOR)
+  /// Send this person an email when someone else adds or changes something on the site.
+  notifyEmail Boolean @default(true)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
@@ -111,4 +114,66 @@ model Connector {
   createdAt   DateTime @default(now())
 
   @@unique([siteId, name])
+}
+
+/// A key that lets one AI tool (Claude, ChatGPT/Codex, Gemini, Cursor...) use the CMS through MCP. One key per tool, so one
+/// can be removed without affecting the others. siteId empty = the key reaches every site.
+model McpKey {
+  id        String   @id @default(cuid())
+  siteId    String?
+  site      Site?    @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  /// which AI tool it is for: claude-code, claude-desktop, codex, gemini, cursor, vscode, windsurf, other
+  tool      String   @default("other")
+  label     String
+  /// SHA-256 of the key, used to check requests
+  hash      String   @unique
+  /// the key itself, encrypted, so it can be shown again (empty for keys made before this existed)
+  keyEnc    String?
+  /// read | draft | publish
+  perm      String   @default("draft")
+  last4     String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([siteId])
+}
+
+/// One saved copy of a document, written every time it is created, changed, published or deleted. Kept after the document is deleted.
+model EntryVersion {
+  id        String   @id @default(cuid())
+  entryId   String
+  siteId    String
+  typeName  String
+  title     String
+  slug      String?
+  data      Json
+  status    String
+  /// created | edited | published | unpublished | deleted | restored
+  action    String
+  summary   String   @default("")
+  actorId   String?
+  actorName String
+  /// cms | ai
+  source    String   @default("cms")
+  createdAt DateTime @default(now())
+
+  @@index([entryId, createdAt])
+  @@index([siteId, createdAt])
+}
+
+/// "Someone changed something": shown in the bell, and mailed to the site's members.
+model Notification {
+  id        String    @id @default(cuid())
+  siteId    String
+  entryId   String?
+  action    String
+  title     String
+  summary   String    @default("")
+  actorId   String?
+  actorName String
+  source    String    @default("cms")
+  emailedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([siteId, createdAt])
+  @@index([emailedAt])
 }

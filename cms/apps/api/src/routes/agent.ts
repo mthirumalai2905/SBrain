@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { requireSite } from '../auth.js';
 import { validateData, type Field } from '../fields.js';
-import { runModel, type ProviderId, type ToolDef } from '../agent/models.js';
+import { ProviderError, explain, isEnabled, runModel, type ProviderId, type ToolDef } from '../agent/models.js';
 import { allProviders, resolveCredential } from '../agent/keys.js';
 import { readGoogleFile } from '../agent/google.js';
 import { callApi } from '../agent/apis.js';
@@ -107,6 +107,7 @@ export default async function (app: FastifyInstance) {
     const { siteId } = req.params as { siteId: string };
     const body = chatBody.parse(req.body);
     const provider = body.provider as ProviderId;
+    if (!isEnabled(provider)) return reply.code(400).send({ error: 'That AI model is turned off. Choose another one.' });
     const cred = await resolveCredential(siteId, provider);
     if (!cred.key) {
       const p = allProviders().find((x) => x.id === provider)!;
@@ -270,6 +271,10 @@ export default async function (app: FastifyInstance) {
     try {
       replyText = await runModel(provider, { system, history: body.messages.slice(-20), tools: toolList, run }, cred);
     } catch (e) {
+      if (e instanceof ProviderError) {
+        const x = explain(provider, e);
+        return reply.code(502).send({ error: x.message, code: x.code, provider });
+      }
       return reply.code(502).send({ error: (e as Error).message });
     }
     const has = proposal.edits.length || proposal.addSections.length || proposal.removeKeys.length || proposal.readyToPublish;

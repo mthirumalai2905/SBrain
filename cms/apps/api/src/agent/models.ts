@@ -12,9 +12,20 @@ export interface RunInput { system: string; history: Turn[]; tools: ToolDef[]; r
 export const PROVIDERS = [
   { id: 'anthropic', label: 'Claude', keyEnv: 'ANTHROPIC_API_KEY', modelEnv: 'ANTHROPIC_MODEL', defaultModel: 'claude-sonnet-5-5' },
   { id: 'openai', label: 'ChatGPT', keyEnv: 'OPENAI_API_KEY', modelEnv: 'OPENAI_MODEL', defaultModel: 'gpt-4.1' },
-  { id: 'gemini', label: 'Gemini', keyEnv: 'GEMINI_API_KEY', modelEnv: 'GEMINI_MODEL', defaultModel: 'gemini-2.5-pro' },
+  { id: 'gemini', label: 'Gemini', keyEnv: 'GEMINI_API_KEY', modelEnv: 'GEMINI_MODEL', defaultModel: 'gemini-3.1-pro-preview' },
 ] as const;
 export type ProviderId = (typeof PROVIDERS)[number]['id'];
+
+/**
+ * Which models the assistant offers. Only Gemini for now (the others stay in the code, and any key already saved for
+ * them is kept, but they are hidden). To bring them back, list them in AI_PROVIDERS in apps/api/.env,
+ * for example AI_PROVIDERS=gemini,anthropic,openai
+ */
+export const ENABLED_PROVIDERS: ProviderId[] = (process.env.AI_PROVIDERS || 'gemini')
+  .split(',')
+  .map((x) => x.trim())
+  .filter((x): x is ProviderId => PROVIDERS.some((p) => p.id === x));
+export const isEnabled = (id: string) => (ENABLED_PROVIDERS as string[]).includes(id);
 
 export const providerInfo = (id: string) => PROVIDERS.find((p) => p.id === id);
 export const modelFor = (id: ProviderId) => {
@@ -30,15 +41,50 @@ export const keyFor = (id: ProviderId) => process.env[PROVIDERS.find((x) => x.id
 
 const MAX_STEPS = 8;
 
+/** A provider that says "overloaded" (503) is usually fine a few seconds later, so ask again up to twice before giving up. */
+/** An error from the AI service, with the HTTP status and the provider's own wording kept for the caller. */
+export class ProviderError extends Error {
+  constructor(message: string, readonly status: number, readonly detail: string) { super(message); }
+}
+
+const billing: Record<string, string> = {
+  anthropic: 'https://console.anthropic.com/settings/billing',
+  openai: 'https://platform.openai.com/settings/organization/billing',
+  gemini: 'https://aistudio.google.com/plan_information',
+};
+
+/** What went wrong in plain words, and a code the editor uses to decide whether to switch to another model. */
+export function explain(provider: ProviderId, e: ProviderError): { message: string; code: 'credits' | 'key' | 'busy' | 'limit' | 'model' | 'other' } {
+  const label = PROVIDERS.find((p) => p.id === provider)!.label;
+  const d = e.detail;
+  if (e.status === 402 || (e.status === 429 && /credit|quota|billing|insufficient|exceeded your current/i.test(d))) {
+    return { code: 'credits', message: `${label} has no credits or free quota left. Add credits at ${billing[provider]}, or use another model.` };
+  }
+  if (e.status === 401 || e.status === 403) return { code: 'key', message: `${label} rejected the key. Check it under Settings › AI assistant.` };
+  if (e.status === 429) return { code: 'limit', message: `Too many requests to ${label} right now. Wait a minute and try again.` };
+  if (e.status === 404 && /model/i.test(d)) return { code: 'model', message: `${label} no longer offers the model that is set. Pick another one under Settings › AI assistant (the Model box), then Test it.` };
+  if (e.status >= 500) return { code: 'busy', message: `${label} is busy or down at the moment. Try again in a minute.` };
+  return { code: 'other', message: e.message };
+}
+
+async function sendWithRetry(url: string, init: RequestInit): Promise<Response> {
+  let res = await fetch(url, init);
+  for (let attempt = 1; attempt <= 2 && res.status === 503; attempt++) {
+    await new Promise((r) => setTimeout(r, 2000 * attempt));
+    res = await fetch(url, { ...init, signal: AbortSignal.timeout(90_000) });
+  }
+  return res;
+}
+
 async function post(url: string, headers: Record<string, string>, body: unknown): Promise<any> {
-  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body), signal: AbortSignal.timeout(90_000) });
+  const res = await sendWithRetry(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body), signal: AbortSignal.timeout(90_000) });
   const text = await res.text();
   let json: any;
   try { json = JSON.parse(text); } catch { json = undefined; }
   if (!res.ok) {
     const detail = String(json?.error?.message ?? json?.message ?? text).replace(/\s+/g, ' ').slice(0, 300);
     // never echo anything that could be a key
-    throw new Error(`The AI service answered ${res.status}: ${detail.replace(/[A-Za-z0-9_-]{32,}/g, '…')}`);
+    throw new ProviderError(`The AI service answered ${res.status}: ${detail.replace(/[A-Za-z0-9_-]{32,}/g, '…')}`, res.status, detail);
   }
   return json;
 }

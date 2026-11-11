@@ -7,7 +7,8 @@
     "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "migrate": "prisma migrate dev",
-    "deploy": "prisma migrate deploy"
+    "deploy": "prisma migrate deploy",
+    "gateway": "tsx src/gateway.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.0",
@@ -18,10 +19,12 @@
     "bcryptjs": "^3.0.0",
     "dotenv": "^16.4.0",
     "fastify": "^5.0.0",
+    "nodemailer": "^10.5.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/nodemailer": "^8.0.2",
     "prisma": "^6.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"

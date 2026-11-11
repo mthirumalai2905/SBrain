@@ -122,3 +122,22 @@ The assistant is in **Live preview** (the AI assistant tab) and in **Structure**
 **Settings › AI assistant › AI models** is where you add the Claude, ChatGPT and Gemini keys (and, optionally, which model each one uses). Each has a **Test** button. Keys are stored encrypted on the server (AES-256-GCM), only the last four characters are ever shown, and a key saved here wins over `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` in `apps/api/.env`, which still work as a fallback.
 
 Settings is split into sections: **Website** (name, addresses, preview address), **AI assistant** (models and connectors), **Connect your website** (the key your front end uses), **Team**, and **All sites** (super admins).
+
+## Connect AI tools (the CMS as an MCP server)
+
+Claude (web, desktop app, Claude Code), ChatGPT, Codex, Gemini CLI, Cursor, VS Code, Windsurf and any other tool that speaks MCP can read and edit a site through the CMS, using their own plans (no API credits).
+
+1. **Settings › Connect AI tools** (one site) or **Settings › All sites** (every site): add a key for each AI tool. Every key can be shown and copied at any time (they are stored encrypted), and removed on its own. Choose what it may do: read only; read and save drafts; or also publish and change live pages.
+2. Press **Setup** on a key. It lists exactly what that tool asks for with the key filled in: a **Name** and an **MCP server URL** for apps with an "Add custom connector" form (Claude, ChatGPT), or a command / config snippet for Claude Code, Codex, Gemini CLI, Cursor, VS Code and Windsurf.
+
+**Apps that connect from the internet** (Claude's "Add custom connector", ChatGPT) cannot reach `localhost`; they need a public https address, and their form has no field for a key, so the key goes inside the address: `https://<public address>/mcp/k/<key>`. To get one without exposing the whole CMS, run `npm run mcp:public` (a tiny door on port 4010 that forwards only `/mcp/k/<key>` and answers 404 to everything else) and point a tunnel at it, for example `cloudflared tunnel --url http://localhost:4010`. Paste the https address it prints into the box at the top of the Connect AI tools screen. Never point a tunnel at port 4000 while sign-in is off. The key is never written to the logs. Tools on this computer use `http://localhost:4000/mcp` with an `Authorization: Bearer <key>` header.
+
+Tools: `get_site`, `list_documents`, `get_document`, `create_draft_copy`, `create_draft_page`, `update_draft`; with the all-sites key also `list_sites` and a `site` argument on every tool; with the publish level also `preview_publish` + `publish_page` and `preview_live_edit` + `update_live_page`.
+
+**Anything that changes the live site is confirmed in the AI tool, not in the CMS.** The AI first calls a `preview_*` tool, which changes nothing and returns what would change plus a short-lived token for exactly those changes. It must show you and ask. Only then does it call the matching live tool, which needs the token and your confirmation in your own words, and which is marked as a destructive tool so the AI app shows its own Allow / Deny button. Do not choose "Always allow" for `publish_page` or `update_live_page`: the CMS cannot stop an AI app you have told to always allow. Requests from a web page (they carry an Origin header) are refused, and removing a key takes effect immediately.
+
+## Notifications and version history
+
+- **Bell** (top bar): shows who added, edited, published or deleted something on the site, including changes made by AI tools (shown as "Claude (AI)", "Cursor (AI)" and so on). The badge counts changes by other people since you last opened it.
+- **Email**: members of a site get one email per batch of changes (sent a minute after the first one), never about their own changes. Each person can turn it off in the bell menu. It needs an SMTP account: set `SMTP_HOST` (and `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`) in `apps/api/.env`, see `.env.example`. Without it nothing is sent and the changes wait for up to a day.
+- **History** (button in every page and document): every save is kept (the latest 60 per document), with who made it and what changed. **Restore** puts an older version back. The page keeps its current status, and the restore is itself added to the history so it can be undone. The history of a deleted document is kept too.

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { api, type Site } from '../api';
 
 /** What the assistant proposes. It never saves or publishes: the page editor applies it as unsaved changes. */
@@ -23,9 +23,13 @@ interface Info {
 interface Msg {
   role: 'user' | 'assistant'; content: string; applied?: Applied; locked?: boolean; undone?: boolean;
   ready?: boolean; tools?: { name: string; ok: boolean }[]; error?: boolean;
+  /** a small status line (for example "switched to Gemini"), not part of the conversation sent to the AI */
+  note?: boolean;
 }
 
 const KEY = 'cms_agent_provider';
+/** Which model to use first, and which to switch to when one runs out of credits: the free-to-start one first. */
+const PREFER = ['gemini', 'anthropic', 'openai'];
 const GOOGLE_LINK = /https:\/\/docs\.google\.com\/(document|spreadsheets|presentation)\/d\/[\w-]+[^\s]*/i;
 const toolLabel = (n: string) =>
   n === 'read_google_doc' ? 'Read a Google file' : n === 'call_api' ? 'Read from an API' : n.startsWith('mcp_') ? `Used ${n.split('_')[1]} (MCP)` : n;
@@ -133,6 +137,7 @@ function Bubble({ m, last, busy, onUndo, onPublish, onFollow }: { m: Msg; last: 
   const copy = async () => {
     try { await navigator.clipboard.writeText(m.content); setCopied(true); setTimeout(() => setCopied(false), 1400); } catch { /* clipboard not available */ }
   };
+  if (m.note) return <div className="ag-switch" role="status">{m.content}</div>;
   if (m.role === 'user') return <div className="ag-msg user"><div className="ag-bubble">{m.content}</div></div>;
   const steps = m.tools?.filter((t) => t.name !== 'propose_changes') ?? [];
   return (
@@ -184,12 +189,25 @@ export function AgentPanel({ site, typeSlug, getDoc, apply, onPublish, active, o
   const end = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
 
+  const [infoErr, setInfoErr] = useState('');
+  // Which models are ready. Loaded when the panel opens, retried on its own if the server was busy restarting, and
+  // refreshed when you come back to the tab (so a key added in Settings shows up without a reload).
+  const loadInfo = useCallback(() => api<Info>(`/sites/${site.id}/agent/providers`).then((i) => {
+    setInfo(i);
+    setInfoErr('');
+    setProvider((cur) => (i.providers.some((p) => p.id === cur && p.configured) ? cur : PREFER.find((id) => i.providers.some((p) => p.id === id && p.configured)) ?? cur));
+  }).catch((e) => setInfoErr((e as Error).message)), [site.id]);
+  useEffect(() => { if (active) loadInfo(); }, [loadInfo, active]);
   useEffect(() => {
-    api<Info>(`/sites/${site.id}/agent/providers`).then((i) => {
-      setInfo(i);
-      setProvider((cur) => (i.providers.some((p) => p.id === cur && p.configured) ? cur : i.providers.find((p) => p.configured)?.id ?? cur));
-    }).catch(() => setInfo(null));
-  }, [site.id]);
+    if (!infoErr) return;
+    // keeps trying every few seconds until the server answers (the error clears on success)
+    const t = setInterval(loadInfo, 3000);
+    return () => clearInterval(t);
+  }, [infoErr, loadInfo]);
+  useEffect(() => {
+    window.addEventListener('focus', loadInfo);
+    return () => window.removeEventListener('focus', loadInfo);
+  }, [loadInfo]);
   useEffect(() => { if (provider) localStorage.setItem(KEY, provider); }, [provider]);
   useEffect(() => { end.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }); }, [msgs, busy, active]);
   useEffect(() => {
@@ -209,6 +227,32 @@ export function AgentPanel({ site, typeSlug, getDoc, apply, onPublish, active, o
   const ready = !!chosen?.configured;
   const link = text.match(GOOGLE_LINK);
 
+  const labelOf = (id: string) => info?.providers.find((p) => p.id === id)?.label ?? id;
+
+  /** Asks one model. If it is out of credits or rejects its key, the next ready model (Gemini first) takes over by itself. */
+  async function ask(history: Msg[], prov: string, tried: string[]): Promise<void> {
+    try {
+      const r = await api<{ reply: string; proposal: Proposal | null; tools: { name: string; ok: boolean }[] }>(`/sites/${site.id}/agent/chat`, {
+        body: { provider: prov, messages: history.filter((m) => !m.note).map((m) => ({ role: m.role, content: m.content })), doc: { typeSlug, ...getDoc() } },
+      });
+      // earlier changes can no longer be taken back once newer ones are on top
+      const applied = r.proposal && (r.proposal.edits.length || r.proposal.addSections.length || r.proposal.removeKeys.length) ? apply(r.proposal) : undefined;
+      setMsgs((m) => [...m.map((x) => ({ ...x, locked: !!x.applied || x.locked })), { role: 'assistant', content: r.reply, applied, ready: r.proposal?.readyToPublish, tools: r.tools }]);
+    } catch (e) {
+      const code = (e as { code?: string }).code;
+      const used = [...tried, prov];
+      const other = code === 'credits' || code === 'key'
+        ? PREFER.find((id) => !used.includes(id) && info?.providers.some((p) => p.id === id && p.configured))
+        : undefined;
+      if (other) {
+        setMsgs((m) => [...m, { role: 'assistant', content: `${labelOf(prov)} can't be used right now (${code === 'credits' ? 'no credits left' : 'its key was rejected'}). Switching to ${labelOf(other)}…`, note: true }]);
+        setProvider(other);
+        return ask(history, other, used);
+      }
+      setMsgs((m) => [...m, { role: 'assistant', content: (e as Error).message, error: true }]);
+    }
+  }
+
   async function send(content = text) {
     const q = content.trim();
     if (!q || busy || !ready) return;
@@ -216,16 +260,7 @@ export function AgentPanel({ site, typeSlug, getDoc, apply, onPublish, active, o
     const history = [...msgs, { role: 'user' as const, content: q }];
     setMsgs(history);
     setBusy(true);
-    try {
-      const r = await api<{ reply: string; proposal: Proposal | null; tools: { name: string; ok: boolean }[] }>(`/sites/${site.id}/agent/chat`, {
-        body: { provider, messages: history.map((m) => ({ role: m.role, content: m.content })), doc: { typeSlug, ...getDoc() } },
-      });
-      // earlier changes can no longer be taken back once newer ones are on top
-      const applied = r.proposal && (r.proposal.edits.length || r.proposal.addSections.length || r.proposal.removeKeys.length) ? apply(r.proposal) : undefined;
-      setMsgs((m) => [...m.map((x) => ({ ...x, locked: !!x.applied || x.locked })), { role: 'assistant', content: r.reply, applied, ready: r.proposal?.readyToPublish, tools: r.tools }]);
-    } catch (e) {
-      setMsgs((m) => [...m, { role: 'assistant', content: (e as Error).message, error: true }]);
-    }
+    await ask(history, provider, []);
     setBusy(false);
   }
 
@@ -242,19 +277,28 @@ export function AgentPanel({ site, typeSlug, getDoc, apply, onPublish, active, o
         <span className="ag-logo" aria-hidden><Spark size={18} /></span>
         <div className="ag-title">
           <b>AI assistant</b>
-          <small>{chosen ? `${chosen.label} · ${chosen.model}` : 'Choose a model'}</small>
+          <small>{chosen ? `${chosen.label} · ${chosen.model}` : info ? 'Choose a model' : infoErr ? 'Not connected' : 'Connecting…'}</small>
         </div>
         <div className="ag-head-actions">
-          <select aria-label="AI model" value={provider} onChange={(e) => setProvider(e.target.value)}>
-            {!provider && <option value="">Choose…</option>}
-            {info?.providers.map((p) => <option key={p.id} value={p.id} disabled={!p.configured}>{p.label}{p.configured ? '' : ' (no key)'}</option>)}
-          </select>
+          {info && info.providers.length > 1 ? (
+            <select aria-label="AI model" value={provider} onChange={(e) => setProvider(e.target.value)}>
+              {!provider && <option value="">Choose…</option>}
+              {info.providers.map((p) => <option key={p.id} value={p.id} disabled={!p.configured}>{p.label}{p.configured ? '' : ' (no key)'}</option>)}
+            </select>
+          ) : null}
           <button type="button" className="ag-icon" title="New chat" aria-label="New chat" disabled={!msgs.length || busy} onClick={() => setMsgs([])}><Icon name="plus" /></button>
           {onClose && <button type="button" className="ag-icon" title="Close" aria-label="Close the assistant" onClick={onClose}><Icon name="close" /></button>}
         </div>
       </header>
 
       <div className="ag-scroll">
+        {!info && infoErr && (
+          <div className="ag-setup">
+            <b>Can't reach the server</b>
+            <p className="muted">{infoErr} Trying again…</p>
+            <button type="button" onClick={loadInfo}>Try now</button>
+          </div>
+        )}
         {info && !info.providers.some((p) => p.configured) && (
           <div className="ag-setup">
             <b>Add an AI key to get started</b>
@@ -306,7 +350,7 @@ export function AgentPanel({ site, typeSlug, getDoc, apply, onPublish, active, o
             ref={box}
             rows={1}
             value={text}
-            placeholder={ready ? 'Ask for a change, or paste a Google Doc link…' : 'Add an AI key to start'}
+            placeholder={ready ? 'Ask for a change, or paste a Google Doc link…' : info ? 'Add an AI key to start' : 'Connecting to the server…'}
             disabled={!ready || busy}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}

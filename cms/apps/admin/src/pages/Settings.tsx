@@ -3,9 +3,10 @@ import { ask } from '../lib/confirm';
 import { API, api, type Member, type Role, type Site, type User } from '../api';
 import { AiKeys } from './AiKeys';
 import { Connectors } from './Connectors';
+import { AiToolsConnect } from './AiToolsConnect';
 
 interface Props { user: User; site?: Site; sites: Site[]; reload: () => Promise<void>; onSelect: (id: string) => void }
-type Section = 'website' | 'ai' | 'connect' | 'team' | 'sites';
+type Section = 'website' | 'ai' | 'tools' | 'connect' | 'team' | 'sites';
 
 const KEY = 'cms_settings_section';
 const list = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
@@ -28,9 +29,10 @@ export function Settings({ user, site, reload, onSelect }: Props) {
   const sections: { id: Section; label: string; hint: string; show: boolean }[] = [
     { id: 'website', label: 'Website', hint: 'Name, address and preview', show: !!site && admin },
     { id: 'ai', label: 'AI assistant', hint: 'Keys and connectors', show: !!site && admin },
+    { id: 'tools', label: 'Connect AI tools', hint: 'Claude, ChatGPT, Gemini, Cursor…', show: !!site && admin },
     { id: 'connect', label: 'Connect your website', hint: 'Key for your front end', show: !!site && admin },
     { id: 'team', label: 'Team', hint: 'Who can edit', show: !!site && (admin || user.isSuperAdmin) },
-    { id: 'sites', label: 'All sites', hint: 'Add a new website', show: user.isSuperAdmin },
+    { id: 'sites', label: 'All sites', hint: 'Connect AI tools, add a website', show: user.isSuperAdmin },
   ];
   const visible = sections.filter((s) => s.show);
   const [pick, setPick] = useState<Section>(() => (localStorage.getItem(KEY) as Section) || 'website');
@@ -119,13 +121,20 @@ export function Settings({ user, site, reload, onSelect }: Props) {
           {/* ---------- AI assistant ---------- */}
           {current?.id === 'ai' && site && (
             <>
-              <Block title="AI models" hint="Add a key for each AI you want to use. The assistant in the editor lets you pick between them. Keys are stored encrypted and are never shown again.">
+              <Block title="AI models" hint="Add the key the AI assistant uses. It works on every site, and is stored encrypted and never shown again.">
                 <AiKeys site={site} />
               </Block>
               <Block title="Connectors" hint="Extra places the assistant can read from, such as an MCP server or a REST API. Google Docs need no setup: paste the link in the chat.">
                 <Connectors site={site} />
               </Block>
             </>
+          )}
+
+          {/* ---------- Connect AI tools ---------- */}
+          {current?.id === 'tools' && site && (
+            <Block title="Connect AI tools" hint={<>Let Claude, ChatGPT, Gemini, Cursor or any AI tool that supports MCP read and edit <b>{site.name}</b>. Each tool gets its own key, which you can show and copy any time. Want one connection for every site? Use <b>All sites</b> in the menu.</>}>
+              <AiToolsConnect site={site} />
+            </Block>
           )}
 
           {/* ---------- Connect your website ---------- */}
@@ -222,6 +231,10 @@ window.addEventListener('synx:preview', (e) => {
 
           {/* ---------- All sites ---------- */}
           {current?.id === 'sites' && (
+            <>
+            <Block title="Connect AI tools to every site" hint="One set of keys that reaches all your sites, for Claude, ChatGPT, Gemini, Cursor or any AI tool that supports MCP. The tool says which site each request is about. You can still make keys for a single site under that site's Connect AI tools.">
+              <AiToolsConnect />
+            </Block>
             <Block title="Add a website" hint="Each website has its own pages, media, team and AI settings, all managed from this one CMS.">
               <div className="set-form">
                 <label>Name <input placeholder="My new site" value={n.name} onChange={(e) => setN({ ...n, name: e.target.value })} /></label>
@@ -236,6 +249,7 @@ window.addEventListener('synx:preview', (e) => {
                 })}>Create website</button>
               </div>
             </Block>
+            </>
           )}
         </div>
       </div>

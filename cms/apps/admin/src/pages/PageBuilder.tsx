@@ -4,6 +4,7 @@ import { api, type ContentType, type Entry, type Section, type Site } from '../a
 import { FieldForm } from './FieldInput';
 import { AgentPanel, type Applied, type Proposal } from './AgentPanel';
 import { applyProposalTo, useAiOpen } from '../lib/assistant';
+import { History } from './History';
 
 type Status = 'DRAFT' | 'PUBLISHED';
 type Draft = Partial<Entry> & { contentTypeId: string };
@@ -31,9 +32,9 @@ const Grip = () => (
  * Columns 2 and 3 for a page: the ordered list of sections (drag to reorder, "…" menu, Add item) and the
  * editor for whatever is selected: the page's own fields, or one section's fields.
  */
-export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved, onDeleted }: {
+export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved, onDeleted, onRestored }: {
   site: Site; type: ContentType; sectionTypes: ContentType[]; entry: Draft; canEdit: boolean;
-  onSaved: (e: Entry) => void; onDeleted: () => void;
+  onSaved: (e: Entry) => void; onDeleted: () => void; onRestored: (e: Entry) => void;
 }) {
   const init = entry.data ?? {};
   const [data, setData] = useState<Record<string, unknown>>(() => { const { sections: _s, ...rest } = init; return rest; });
@@ -51,6 +52,7 @@ export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved,
   const snapshot = (st = status) => JSON.stringify([data, sections, slug, st]);
   const [baseline, setBaseline] = useState(snapshot);
   const dirty = snapshot() !== baseline;
+  const [showHistory, setShowHistory] = useState(false);
   const base = `/sites/${site.id}/entries`;
   const def = (slugName: string) => sectionTypes.find((t) => t.slug === slugName);
 
@@ -218,6 +220,7 @@ export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved,
             </div>
             <div className="grow" />
             {canEdit && <button className={`ai-toggle${aiOpen ? ' on' : ''}`} aria-pressed={aiOpen} onClick={toggleAi}>✦ AI assistant</button>}
+            {entry.id && <button className="link" onClick={() => setShowHistory(true)}>History</button>}
             {canEdit && entry.id && <button className="link delete-link" onClick={async () => { if (await ask({ title: 'Delete this page?', message: 'The page and all its sections are removed permanently and cannot be undone.', confirmLabel: 'Delete page' })) { await api(`${base}/${entry.id}`, { method: 'DELETE' }); onDeleted(); } }}>Delete page</button>}
             {canEdit && dirty && !saving && <span className="muted">Unsaved changes</span>}
             {canEdit && <button disabled={saving || !dirty} onClick={() => save()}>{saving ? 'Saving…' : 'Save'}</button>}
@@ -226,6 +229,7 @@ export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved,
           <div className="editor-scroll">{form}</div>
         </div>
       </section>
+      {showHistory && entry.id && <History site={site} entryId={entry.id} name={pageTitle} canEdit={canEdit} onClose={() => setShowHistory(false)} onRestored={onRestored} />}
       {canEdit && (
         <aside className="ai-drawer" hidden={!aiOpen}>
           <AgentPanel site={site} typeSlug={type.slug} active={aiOpen} onClose={toggleAi} apply={applyProposal} onPublish={publish}

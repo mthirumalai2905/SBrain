@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import Fastify from 'fastify';
+import Fastify, { type FastifyRequest } from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import multipart from '@fastify/multipart';
@@ -16,6 +16,10 @@ import pub from './routes/public.js';
 import agent from './routes/agent.js';
 import connectors from './routes/connectors.js';
 import aikeys from './routes/aikeys.js';
+import mcpkeys from './routes/mcpkeys.js';
+import mcpserver from './routes/mcpserver.js';
+import activity from './routes/activity.js';
+import { startMailer } from './mailer.js';
 
 const secret = process.env.JWT_SECRET;
 if (!secret || secret.length < 16) throw new Error('Set JWT_SECRET (16+ chars) in apps/api/.env');
@@ -24,7 +28,17 @@ if (process.env.AUTH_DISABLED === 'true' && !['localhost', '127.0.0.1', '::1'].i
   throw new Error('AUTH_DISABLED=true is only allowed when HOST is localhost, 127.0.0.1 or ::1');
 }
 
-const app = Fastify({ logger: true });
+// Some AI apps take the key inside the address (/mcp/k/<key>), so the log must never print it.
+const hideKey = (url: string) => String(url).replace(/\/mcp\/k\/[^/?#]+/, '/mcp/k/…');
+const app = Fastify({
+  logger: {
+    serializers: {
+      req: (req: FastifyRequest) => ({
+        method: req.method, url: hideKey(req.url ?? ''), host: req.headers?.host, remoteAddress: req.ip, remotePort: req.socket?.remotePort,
+      }),
+    },
+  },
+});
 
 app.setErrorHandler((err: Error & { statusCode?: number }, _req, reply) => {
   if (err instanceof ZodError) {
@@ -78,6 +92,10 @@ await app.register(pub);
 await app.register(agent);
 await app.register(connectors);
 await app.register(aikeys);
+await app.register(mcpkeys);
+await app.register(mcpserver);
+await app.register(activity);
+startMailer();
 
 const port = Number(process.env.PORT ?? 4000);
 const host = process.env.HOST ?? 'localhost';
