@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 253 242" fill="none">
+  <defs>
+    <radialGradient id="hot" cx="38%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#f4fff8" stop-opacity="0.85"/>
+      <stop offset="45%" stop-color="#4ade80" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#14532d" stop-opacity="0.08"/>
+    </radialGradient>
+    <radialGradient id="mid" cx="40%" cy="36%" r="75%">
+      <stop offset="0%" stop-color="#d8ffe9" stop-opacity="0.5"/>
+      <stop offset="70%" stop-color="#22c55e" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#064e2a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-8%" y="-8%" width="116%" height="116%">
+      <feGaussianBlur stdDeviation="0.45"/>
+    </filter>
+  </defs>
+  <g filter="url(#soft)" stroke-linejoin="round">
+    <polygon points="8.00,-2.00 18.39,4.00 18.39,16.00 8.00,22.00 -2.39,16.00 -2.39,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.059" stroke-width="0.4"/>
+    <polygon points="28.78,-2.00 39.18,4.00 39.18,16.00 28.78,22.00 18.39,16.00 18.39,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.077" stroke-width="0.4"/>
+    <polygon points="49.57,-2.00 59.96,4.00 59.96,16.00 49.57,22.00 39.18,16.00 39.18,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.096" stroke-width="0.4"/>
+    <polygon points="70.35,-2.00 80.75,4.00 80.75,16.00 70.35,22.00 59.96,16.00 59.96,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.115" stroke-width="0.4"/>
+    <polygon points="91.14,-2.00 101.53,4.00 101.53,16.00 91.14,22.00 80.75,16.00 80.75,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.135" stroke-width="0.4"/>
+    <polygon points="111.92,-2.00 122.32,4.00 122.32,16.00 111.92,22.00 101.53,16.00 101.53,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.155" stroke-width="0.4"/>
+    <polygon points="132.71,-2.00 143.10,4.00 143.10,16.00 132.71,22.00 122.32,16.00 122.32,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.176" stroke-width="0.4"/>
+    <polygon points="153.49,-2.00 163.88,4.00 163.88,16.00 153.49,22.00 143.10,16.00 143.10,4.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.196" stroke-width="0.4"/>
+    <polygon points="174.28,-2.00 184.67,4.00 184.67,16.00 174.28,22.00 163.88,16.00 163.88,4.00" fill="url(#hot)" stroke="#eafff4" stroke-opacity="0.7" stroke-width="0.45"/>
+    <polygon points="195.06,-2.00 205.45,4.00 205.45,16.00 195.06,22.00 184.67,16.00 184.67,4.00" fill="url(#hot)" stroke="#eafff4" stroke-opacity="0.7" stroke-width="0.45"/>
+    <polygon points="215.85,-2.00 226.24,4.00 226.24,16.00 215.85,22.00 205.45,16.00 205.45,4.00" fill="url(#hot)" stroke="#eafff4" stroke-opacity="0.7" stroke-width="0.45"/>
+    <polygon points="18.39,16.00 28.78,22.00 28.78,34.00 18.39,40.00 8.00,34.00 8.00,22.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.066" stroke-width="0.4"/>
+    <polygon points="39.18,16.00 49.57,22.00 49.57,34.00 39.18,40.00 28.78,34.00 28.78,22.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.084" stroke-width="0.4"/>
+    <polygon points="59.96,16.00 70.35,22.00 70.35,34.00 59.96,40.00 49.57,34.00 49.57,22.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.103" stroke-width="0.4"/>
+    <polygon points="80.75,16.00 91.14,22.00 91.14,34.00 80.75,40.00 70.35,34.00 70.35,22.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.122" stroke-width="0.4"/>
+    <polygon points="101.53,16.00 111.92,22.00 111.92,34.00 101.53,40.00 91.14,34.00 91.14,22.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.142" stroke-width="0.4"/>
+    <polygon points="122.32,16.00 132.71,22.00 132.71,34.00 122.32,40.00 111.92,34.00 111.92,22.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.161" stroke-width="0.4"/>
+    <polygon points="143.10,16.00 153.49,22.00 153.49,34.00 143.10,40.00 132.71,34.00 132.71,22.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.181" stroke-width="0.4"/>
+    <polygon points="163.88,16.00 174.28,22.00 174.28,34.00 163.88,40.00 153.49,34.00 153.49,22.00" fill="url(#mid)" stroke="#d8ffe9" stroke-opacity="0.42" stroke-width="0.4"/>
+    <polygon points="184.67,16.00 195.06,22.00 195.06,34.00 184.67,40.00 174.28,34.00 174.28,22.00" fill="url(#mid)" stroke="#d8ffe9" stroke-opacity="0.42" stroke-width="0.4"/>
+    <polygon points="205.45,16.00 215.85,22.00 215.85,34.00 205.45,40.00 195.06,34.00 195.06,22.00" fill="url(#hot)" stroke="#eafff4" stroke-opacity="0.7" stroke-width="0.45"/>
+    <polygon points="226.24,16.00 236.63,22.00 236.63,34.00 226.24,40.00 215.85,34.00 215.85,22.00" fill="url(#hot)" stroke="#eafff4" stroke-opacity="0.7" stroke-width="0.45"/>
+    <polygon points="8.00,34.00 18.39,40.00 18.39,52.00 8.00,58.00 -2.39,52.00 -2.39,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.054" stroke-width="0.4"/>
+    <polygon points="28.78,34.00 39.18,40.00 39.18,52.00 28.78,58.00 18.39,52.00 18.39,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.072" stroke-width="0.4"/>
+    <polygon points="49.57,34.00 59.96,40.00 59.96,52.00 49.57,58.00 39.18,52.00 39.18,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.090" stroke-width="0.4"/>
+    <polygon points="70.35,34.00 80.75,40.00 80.75,52.00 70.35,58.00 59.96,52.00 59.96,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.108" stroke-width="0.4"/>
+    <polygon points="91.14,34.00 101.53,40.00 101.53,52.00 91.14,58.00 80.75,52.00 80.75,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.127" stroke-width="0.4"/>
+    <polygon points="111.92,34.00 122.32,40.00 122.32,52.00 111.92,58.00 101.53,52.00 101.53,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.146" stroke-width="0.4"/>
+    <polygon points="132.71,34.00 143.10,40.00 143.10,52.00 132.71,58.00 122.32,52.00 122.32,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.164" stroke-width="0.4"/>
+    <polygon points="153.49,34.00 163.88,40.00 163.88,52.00 153.49,58.00 143.10,52.00 143.10,40.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.182" stroke-width="0.4"/>
+    <polygon points="174.28,34.00 184.67,40.00 184.67,52.00 174.28,58.00 163.88,52.00 163.88,40.00" fill="url(#mid)" stroke="#d8ffe9" stroke-opacity="0.42" stroke-width="0.4"/>
+    <polygon points="195.06,34.00 205.45,40.00 205.45,52.00 195.06,58.00 184.67,52.00 184.67,40.00" fill="url(#mid)" stroke="#d8ffe9" stroke-opacity="0.42" stroke-width="0.4"/>
+    <polygon points="215.85,34.00 226.24,40.00 226.24,52.00 215.85,58.00 205.45,52.00 205.45,40.00" fill="url(#hot)" stroke="#eafff4" stroke-opacity="0.7" stroke-width="0.45"/>
+    <polygon points="18.39,52.00 28.78,58.00 28.78,70.00 18.39,76.00 8.00,70.00 8.00,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.058" stroke-width="0.4"/>
+    <polygon points="39.18,52.00 49.57,58.00 49.57,70.00 39.18,76.00 28.78,70.00 28.78,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.076" stroke-width="0.4"/>
+    <polygon points="59.96,52.00 70.35,58.00 70.35,70.00 59.96,76.00 49.57,70.00 49.57,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.093" stroke-width="0.4"/>
+    <polygon points="80.75,52.00 91.14,58.00 91.14,70.00 80.75,76.00 70.35,70.00 70.35,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.111" stroke-width="0.4"/>
+    <polygon points="101.53,52.00 111.92,58.00 111.92,70.00 101.53,76.00 91.14,70.00 91.14,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.129" stroke-width="0.4"/>
+    <polygon points="122.32,52.00 132.71,58.00 132.71,70.00 122.32,76.00 111.92,70.00 111.92,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.146" stroke-width="0.4"/>
+    <polygon points="143.10,52.00 153.49,58.00 153.49,70.00 143.10,76.00 132.71,70.00 132.71,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.163" stroke-width="0.4"/>
+    <polygon points="163.88,52.00 174.28,58.00 174.28,70.00 163.88,76.00 153.49,70.00 153.49,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.179" stroke-width="0.4"/>
+    <polygon points="184.67,52.00 195.06,58.00 195.06,70.00 184.67,76.00 174.28,70.00 174.28,58.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.192" stroke-width="0.4"/>
+    <polygon points="205.45,52.00 215.85,58.00 215.85,70.00 205.45,76.00 195.06,70.00 195.06,58.00" fill="url(#mid)" stroke="#d8ffe9" stroke-opacity="0.42" stroke-width="0.4"/>
+    <polygon points="226.24,52.00 236.63,58.00 236.63,70.00 226.24,76.00 215.85,70.00 215.85,58.00" fill="url(#mid)" stroke="#d8ffe9" stroke-opacity="0.42" stroke-width="0.4"/>
+    <polygon points="8.00,70.00 18.39,76.00 18.39,88.00 8.00,94.00 -2.39,88.00 -2.39,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="28.78,70.00 39.18,76.00 39.18,88.00 28.78,94.00 18.39,88.00 18.39,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.061" stroke-width="0.4"/>
+    <polygon points="49.57,70.00 59.96,76.00 59.96,88.00 49.57,94.00 39.18,88.00 39.18,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.078" stroke-width="0.4"/>
+    <polygon points="70.35,70.00 80.75,76.00 80.75,88.00 70.35,94.00 59.96,88.00 59.96,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.095" stroke-width="0.4"/>
+    <polygon points="91.14,70.00 101.53,76.00 101.53,88.00 91.14,94.00 80.75,88.00 80.75,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.112" stroke-width="0.4"/>
+    <polygon points="111.92,70.00 122.32,76.00 122.32,88.00 111.92,94.00 101.53,88.00 101.53,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.128" stroke-width="0.4"/>
+    <polygon points="132.71,70.00 143.10,76.00 143.10,88.00 132.71,94.00 122.32,88.00 122.32,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.144" stroke-width="0.4"/>
+    <polygon points="153.49,70.00 163.88,76.00 163.88,88.00 153.49,94.00 143.10,88.00 143.10,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.158" stroke-width="0.4"/>
+    <polygon points="174.28,70.00 184.67,76.00 184.67,88.00 174.28,94.00 163.88,88.00 163.88,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.171" stroke-width="0.4"/>
+    <polygon points="195.06,70.00 205.45,76.00 205.45,88.00 195.06,94.00 184.67,88.00 184.67,76.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.181" stroke-width="0.4"/>
+    <polygon points="215.85,70.00 226.24,76.00 226.24,88.00 215.85,94.00 205.45,88.00 205.45,76.00" fill="url(#mid)" stroke="#d8ffe9" stroke-opacity="0.42" stroke-width="0.4"/>
+    <polygon points="18.39,88.00 28.78,94.00 28.78,106.00 18.39,112.00 8.00,106.00 8.00,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.047" stroke-width="0.4"/>
+    <polygon points="39.18,88.00 49.57,94.00 49.57,106.00 39.18,112.00 28.78,106.00 28.78,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.063" stroke-width="0.4"/>
+    <polygon points="59.96,88.00 70.35,94.00 70.35,106.00 59.96,112.00 49.57,106.00 49.57,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.079" stroke-width="0.4"/>
+    <polygon points="80.75,88.00 91.14,94.00 91.14,106.00 80.75,112.00 70.35,106.00 70.35,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.094" stroke-width="0.4"/>
+    <polygon points="101.53,88.00 111.92,94.00 111.92,106.00 101.53,112.00 91.14,106.00 91.14,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.110" stroke-width="0.4"/>
+    <polygon points="122.32,88.00 132.71,94.00 132.71,106.00 122.32,112.00 111.92,106.00 111.92,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.125" stroke-width="0.4"/>
+    <polygon points="143.10,88.00 153.49,94.00 153.49,106.00 143.10,112.00 132.71,106.00 132.71,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.138" stroke-width="0.4"/>
+    <polygon points="163.88,88.00 174.28,94.00 174.28,106.00 163.88,112.00 153.49,106.00 153.49,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.151" stroke-width="0.4"/>
+    <polygon points="184.67,88.00 195.06,94.00 195.06,106.00 184.67,112.00 174.28,106.00 174.28,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.160" stroke-width="0.4"/>
+    <polygon points="205.45,88.00 215.85,94.00 215.85,106.00 205.45,112.00 195.06,106.00 195.06,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.167" stroke-width="0.4"/>
+    <polygon points="226.24,88.00 236.63,94.00 236.63,106.00 226.24,112.00 215.85,106.00 215.85,94.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.170" stroke-width="0.4"/>
+    <polygon points="8.00,106.00 18.39,112.00 18.39,124.00 8.00,130.00 -2.39,124.00 -2.39,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="28.78,106.00 39.18,112.00 39.18,124.00 28.78,130.00 18.39,124.00 18.39,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.047" stroke-width="0.4"/>
+    <polygon points="49.57,106.00 59.96,112.00 59.96,124.00 49.57,130.00 39.18,124.00 39.18,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.062" stroke-width="0.4"/>
+    <polygon points="70.35,106.00 80.75,112.00 80.75,124.00 70.35,130.00 59.96,124.00 59.96,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.077" stroke-width="0.4"/>
+    <polygon points="91.14,106.00 101.53,112.00 101.53,124.00 91.14,130.00 80.75,124.00 80.75,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.092" stroke-width="0.4"/>
+    <polygon points="111.92,106.00 122.32,112.00 122.32,124.00 111.92,130.00 101.53,124.00 101.53,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.106" stroke-width="0.4"/>
+    <polygon points="132.71,106.00 143.10,112.00 143.10,124.00 132.71,130.00 122.32,124.00 122.32,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.119" stroke-width="0.4"/>
+    <polygon points="153.49,106.00 163.88,112.00 163.88,124.00 153.49,130.00 143.10,124.00 143.10,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.130" stroke-width="0.4"/>
+    <polygon points="174.28,106.00 184.67,112.00 184.67,124.00 174.28,130.00 163.88,124.00 163.88,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.140" stroke-width="0.4"/>
+    <polygon points="195.06,106.00 205.45,112.00 205.45,124.00 195.06,130.00 184.67,124.00 184.67,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.147" stroke-width="0.4"/>
+    <polygon points="215.85,106.00 226.24,112.00 226.24,124.00 215.85,130.00 205.45,124.00 205.45,112.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.152" stroke-width="0.4"/>
+    <polygon points="18.39,124.00 28.78,130.00 28.78,142.00 18.39,148.00 8.00,142.00 8.00,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="39.18,124.00 49.57,130.00 49.57,142.00 39.18,148.00 28.78,142.00 28.78,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.046" stroke-width="0.4"/>
+    <polygon points="59.96,124.00 70.35,130.00 70.35,142.00 59.96,148.00 49.57,142.00 49.57,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.060" stroke-width="0.4"/>
+    <polygon points="80.75,124.00 91.14,130.00 91.14,142.00 80.75,148.00 70.35,142.00 70.35,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.074" stroke-width="0.4"/>
+    <polygon points="101.53,124.00 111.92,130.00 111.92,142.00 101.53,148.00 91.14,142.00 91.14,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.087" stroke-width="0.4"/>
+    <polygon points="122.32,124.00 132.71,130.00 132.71,142.00 122.32,148.00 111.92,142.00 111.92,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.099" stroke-width="0.4"/>
+    <polygon points="143.10,124.00 153.49,130.00 153.49,142.00 143.10,148.00 132.71,142.00 132.71,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.111" stroke-width="0.4"/>
+    <polygon points="163.88,124.00 174.28,130.00 174.28,142.00 163.88,148.00 153.49,142.00 153.49,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.120" stroke-width="0.4"/>
+    <polygon points="184.67,124.00 195.06,130.00 195.06,142.00 184.67,148.00 174.28,142.00 174.28,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.128" stroke-width="0.4"/>
+    <polygon points="205.45,124.00 215.85,130.00 215.85,142.00 205.45,148.00 195.06,142.00 195.06,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.133" stroke-width="0.4"/>
+    <polygon points="226.24,124.00 236.63,130.00 236.63,142.00 226.24,148.00 215.85,142.00 215.85,130.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.135" stroke-width="0.4"/>
+    <polygon points="8.00,142.00 18.39,148.00 18.39,160.00 8.00,166.00 -2.39,160.00 -2.39,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="28.78,142.00 39.18,148.00 39.18,160.00 28.78,166.00 18.39,160.00 18.39,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="49.57,142.00 59.96,148.00 59.96,160.00 49.57,166.00 39.18,160.00 39.18,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="70.35,142.00 80.75,148.00 80.75,160.00 70.35,166.00 59.96,160.00 59.96,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.056" stroke-width="0.4"/>
+    <polygon points="91.14,142.00 101.53,148.00 101.53,160.00 91.14,166.00 80.75,160.00 80.75,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.069" stroke-width="0.4"/>
+    <polygon points="111.92,142.00 122.32,148.00 122.32,160.00 111.92,166.00 101.53,160.00 101.53,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.080" stroke-width="0.4"/>
+    <polygon points="132.71,142.00 143.10,148.00 143.10,160.00 132.71,166.00 122.32,160.00 122.32,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.091" stroke-width="0.4"/>
+    <polygon points="153.49,142.00 163.88,148.00 163.88,160.00 153.49,166.00 143.10,160.00 143.10,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.101" stroke-width="0.4"/>
+    <polygon points="174.28,142.00 184.67,148.00 184.67,160.00 174.28,166.00 163.88,160.00 163.88,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.108" stroke-width="0.4"/>
+    <polygon points="195.06,142.00 205.45,148.00 205.45,160.00 195.06,166.00 184.67,160.00 184.67,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.114" stroke-width="0.4"/>
+    <polygon points="215.85,142.00 226.24,148.00 226.24,160.00 215.85,166.00 205.45,160.00 205.45,148.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.117" stroke-width="0.4"/>
+    <polygon points="18.39,160.00 28.78,166.00 28.78,178.00 18.39,184.00 8.00,178.00 8.00,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="39.18,160.00 49.57,166.00 49.57,178.00 39.18,184.00 28.78,178.00 28.78,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="59.96,160.00 70.35,166.00 70.35,178.00 59.96,184.00 49.57,178.00 49.57,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="80.75,160.00 91.14,166.00 91.14,178.00 80.75,184.00 70.35,178.00 70.35,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.051" stroke-width="0.4"/>
+    <polygon points="101.53,160.00 111.92,166.00 111.92,178.00 101.53,184.00 91.14,178.00 91.14,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.062" stroke-width="0.4"/>
+    <polygon points="122.32,160.00 132.71,166.00 132.71,178.00 122.32,184.00 111.92,178.00 111.92,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.072" stroke-width="0.4"/>
+    <polygon points="143.10,160.00 153.49,166.00 153.49,178.00 143.10,184.00 132.71,178.00 132.71,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.082" stroke-width="0.4"/>
+    <polygon points="163.88,160.00 174.28,166.00 174.28,178.00 163.88,184.00 153.49,178.00 153.49,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.089" stroke-width="0.4"/>
+    <polygon points="184.67,160.00 195.06,166.00 195.06,178.00 184.67,184.00 174.28,178.00 174.28,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.095" stroke-width="0.4"/>
+    <polygon points="205.45,160.00 215.85,166.00 215.85,178.00 205.45,184.00 195.06,178.00 195.06,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.099" stroke-width="0.4"/>
+    <polygon points="226.24,160.00 236.63,166.00 236.63,178.00 226.24,184.00 215.85,178.00 215.85,166.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.101" stroke-width="0.4"/>
+    <polygon points="8.00,178.00 18.39,184.00 18.39,196.00 8.00,202.00 -2.39,196.00 -2.39,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="28.78,178.00 39.18,184.00 39.18,196.00 28.78,202.00 18.39,196.00 18.39,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="49.57,178.00 59.96,184.00 59.96,196.00 49.57,202.00 39.18,196.00 39.18,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="70.35,178.00 80.75,184.00 80.75,196.00 70.35,202.00 59.96,196.00 59.96,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="91.14,178.00 101.53,184.00 101.53,196.00 91.14,202.00 80.75,196.00 80.75,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="111.92,178.00 122.32,184.00 122.32,196.00 111.92,202.00 101.53,196.00 101.53,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.054" stroke-width="0.4"/>
+    <polygon points="132.71,178.00 143.10,184.00 143.10,196.00 132.71,202.00 122.32,196.00 122.32,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.063" stroke-width="0.4"/>
+    <polygon points="153.49,178.00 163.88,184.00 163.88,196.00 153.49,202.00 143.10,196.00 143.10,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.071" stroke-width="0.4"/>
+    <polygon points="174.28,178.00 184.67,184.00 184.67,196.00 174.28,202.00 163.88,196.00 163.88,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.077" stroke-width="0.4"/>
+    <polygon points="195.06,178.00 205.45,184.00 205.45,196.00 195.06,202.00 184.67,196.00 184.67,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.081" stroke-width="0.4"/>
+    <polygon points="215.85,178.00 226.24,184.00 226.24,196.00 215.85,202.00 205.45,196.00 205.45,184.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.084" stroke-width="0.4"/>
+    <polygon points="18.39,196.00 28.78,202.00 28.78,214.00 18.39,220.00 8.00,214.00 8.00,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="39.18,196.00 49.57,202.00 49.57,214.00 39.18,220.00 28.78,214.00 28.78,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="59.96,196.00 70.35,202.00 70.35,214.00 59.96,220.00 49.57,214.00 49.57,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="80.75,196.00 91.14,202.00 91.14,214.00 80.75,220.00 70.35,214.00 70.35,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="101.53,196.00 111.92,202.00 111.92,214.00 101.53,220.00 91.14,214.00 91.14,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="122.32,196.00 132.71,202.00 132.71,214.00 122.32,220.00 111.92,214.00 111.92,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.045" stroke-width="0.4"/>
+    <polygon points="143.10,196.00 153.49,202.00 153.49,214.00 143.10,220.00 132.71,214.00 132.71,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.053" stroke-width="0.4"/>
+    <polygon points="163.88,196.00 174.28,202.00 174.28,214.00 163.88,220.00 153.49,214.00 153.49,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.059" stroke-width="0.4"/>
+    <polygon points="184.67,196.00 195.06,202.00 195.06,214.00 184.67,220.00 174.28,214.00 174.28,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.064" stroke-width="0.4"/>
+    <polygon points="205.45,196.00 215.85,202.00 215.85,214.00 205.45,220.00 195.06,214.00 195.06,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.067" stroke-width="0.4"/>
+    <polygon points="226.24,196.00 236.63,202.00 236.63,214.00 226.24,220.00 215.85,214.00 215.85,202.00" fill="none" stroke="#c8ffe4" stroke-opacity="0.068" stroke-width="0.4"/>
+  </g>
+</svg>

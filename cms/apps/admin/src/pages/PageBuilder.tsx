@@ -11,9 +11,18 @@ type Draft = Partial<Entry> & { contentTypeId: string };
 
 const COLLAPSED = 6;
 const uid = () => crypto.randomUUID();
+/** A short title for a section or page: its first text field that has something in it, else its first long text, else the first line of its first list. */
+const clip = (s: string) => { const t = s.replace(/\s+/g, ' ').trim(); return t.length > 70 ? t.slice(0, 69) + '…' : t; };
 const firstText = (t: ContentType | undefined, d: Record<string, unknown>) => {
-  const f = t?.fields.find((x) => x.type === 'text');
-  return f ? String(d[f.name] ?? '') : '';
+  const fields = t?.fields ?? [];
+  const has = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
+  for (const f of fields) if (f.type === 'text' && has(d[f.name])) return clip(d[f.name] as string);
+  for (const f of fields) if (f.type === 'textarea' && has(d[f.name])) return clip(d[f.name] as string);
+  for (const f of fields) {
+    const first = f.type === 'array' && Array.isArray(d[f.name]) ? (d[f.name] as Record<string, unknown>[])[0] : undefined;
+    for (const sf of f.fields ?? []) if ((sf.type === 'text' || sf.type === 'textarea') && has(first?.[sf.name])) return clip(first![sf.name] as string);
+  }
+  return '';
 };
 const firstImage = (t: ContentType | undefined, d: Record<string, unknown>) => {
   const f = t?.fields.find((x) => x.type === 'image');
@@ -32,9 +41,11 @@ const Grip = () => (
  * Columns 2 and 3 for a page: the ordered list of sections (drag to reorder, "…" menu, Add item) and the
  * editor for whatever is selected: the page's own fields, or one section's fields.
  */
-export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved, onDeleted, onRestored }: {
+export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved, onDeleted, onRestored, back }: {
   site: Site; type: ContentType; sectionTypes: ContentType[]; entry: Draft; canEdit: boolean;
   onSaved: (e: Entry) => void; onDeleted: () => void; onRestored: (e: Entry) => void;
+  /** Where this page was opened from (for example the Footer), with a way back to it. */
+  back?: { label: string; onClick: () => void };
 }) {
   const init = entry.data ?? {};
   const [data, setData] = useState<Record<string, unknown>>(() => { const { sections: _s, ...rest } = init; return rest; });
@@ -155,7 +166,10 @@ export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved,
   return (
     <>
       <section className="pane pane-list">
-        <div className="pane-head"><h2 className="pane-title">Page Builder</h2></div>
+        <div className="pane-head">
+          {back && <button className="link" onClick={back.onClick} title={`Back to ${back.label}`}>‹ {back.label}</button>}
+          <h2 className="pane-title">Page Builder</h2>
+        </div>
         <button className={`doc-row${sel === 'page' ? ' on' : ''}`} onClick={() => setSel('page')}>
           <Doc /><span className="doc-title">{pageTitle}</span><span className="muted">page settings</span>
         </button>

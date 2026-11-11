@@ -19,6 +19,8 @@ export const fieldSchema = z.object({
   type: z.enum(fieldTypes),
   required: z.boolean().optional(),
   options: z.array(z.string()).optional(),
+  /** Fields with the same group, next to each other, are shown together in the editor under one heading. */
+  group: z.string().optional(),
   /** For type "array": the fields of each item. */
   fields: z.array(leafFieldSchema).optional(),
 });

@@ -2,7 +2,7 @@ export const API = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
 export type Role = 'ADMIN' | 'EDITOR' | 'VIEWER';
 export type FieldType = 'text' | 'textarea' | 'richtext' | 'number' | 'boolean' | 'date' | 'image' | 'video' | 'color' | 'icon' | 'select' | 'json' | 'array';
-export interface Field { name: string; label?: string; type: FieldType; required?: boolean; options?: string[]; /** type "array": the fields of each item */ fields?: Field[] }
+export interface Field { name: string; label?: string; type: FieldType; required?: boolean; options?: string[]; /** shown together with the fields next to it that have the same group */ group?: string; /** type "array": the fields of each item */ fields?: Field[] }
 export interface User { id: string; email: string; name: string; isSuperAdmin: boolean }
 export interface Site { id: string; name: string; slug: string; domains: string[]; previewUrl?: string | null; apiKey?: string; role: Role }
 export interface ContentType { id: string; name: string; slug: string; fields: Field[]; kind?: 'collection' | 'singleton' | 'page' | 'section' }

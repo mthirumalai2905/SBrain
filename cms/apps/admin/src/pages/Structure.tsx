@@ -13,6 +13,10 @@ type Draft = Partial<Entry> & { contentTypeId: string };
 type View = { t: 'page'; id: string } | { t: 'new-page' } | { t: 'type'; typeId: string };
 
 
+/** Pages are listed by their "order" field (lowest first) when the page type has one, otherwise in the order they were made. */
+const pageOrder = (e: Entry) => { const n = Number((e.data as { order?: unknown }).order); return Number.isFinite(n) && (e.data as { order?: unknown }).order !== undefined && (e.data as { order?: unknown }).order !== '' ? n : 1e9; };
+const byPageOrder = (x: Entry, y: Entry) => pageOrder(x) - pageOrder(y) || x.createdAt.localeCompare(y.createdAt);
+
 const titleOf = (e: Partial<Entry>, t?: ContentType) => {
   const f = t?.fields.find((x) => x.type === 'text');
   return (f && (e.data?.[f.name] as string)) || e.slug || 'Untitled';
@@ -41,7 +45,7 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
       setTypes(t);
       setEntries(e);
       const pageType = t.filter((x) => x.kind === 'page').map((x) => x.id);
-      const firstPage = [...e].filter((x) => pageType.includes(x.contentTypeId)).sort((p, q) => p.createdAt.localeCompare(q.createdAt))[0];
+      const firstPage = [...e].filter((x) => pageType.includes(x.contentTypeId)).sort(byPageOrder)[0];
       const firstContent = t.find((x) => x.kind !== 'page' && x.kind !== 'section');
       setView(firstPage ? { t: 'page', id: firstPage.id } : firstContent ? { t: 'type', typeId: firstContent.id } : null);
     });
@@ -55,7 +59,43 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
   const typeOf = (id: string) => types?.find((t) => t.id === id);
   const pages = entries
     .filter((e) => pageTypes.some((t) => t.id === e.contentTypeId))
-    .sort((x, y) => x.createdAt.localeCompare(y.createdAt)); // creation order, not last-edited
+    .sort(byPageOrder); // the page type's order, else creation order, never last-edited
+
+  // Pages that are linked only from the footer (Contact, legal pages...) are listed under Footer, not with the main pages.
+  // Which pages those are is worked out from the links in the Header and the Footer, so it follows them when they change.
+  const linkedSlugs = (typeSlug: string) => {
+    const out = new Set<string>();
+    const t = types?.find((x) => x.slug === typeSlug);
+    const doc = t ? entries.find((e) => e.contentTypeId === t.id) : undefined;
+    for (const v of Object.values(doc?.data ?? {})) {
+      if (!Array.isArray(v)) continue;
+      for (const item of v) {
+        const url = item && typeof item === 'object' ? (item as { url?: unknown }).url : undefined;
+        if (typeof url === 'string' && url.startsWith('/')) out.add(url.slice(1).split(/[#?]/)[0] || 'home');
+      }
+    }
+    return out;
+  };
+  const inHeader = linkedSlugs('header');
+  const inFooter = linkedSlugs('footer');
+  const footerPages = pages.filter((p) => !!p.slug && p.slug !== 'home' && inFooter.has(p.slug) && !inHeader.has(p.slug));
+  const mainPages = pages.filter((p) => !footerPages.includes(p));
+  const pagesOf = (slug: string) => (slug === 'footer' ? footerPages : []);
+  // The tools in the menu's dropdown are listed under the page whose menu link opens it (Our Tools & Services)
+  const headerDoc = (() => { const t = types?.find((x) => x.slug === 'header'); return t ? entries.find((e) => e.contentTypeId === t.id) : undefined; })();
+  const slugOfUrl = (u: unknown) => (typeof u === 'string' && u.startsWith('/') ? u.slice(1).split(/[#?]/)[0] || 'home' : '');
+  const headerLinks = (headerDoc?.data as { links?: unknown } | undefined)?.links;
+  const headerDrop = (headerDoc?.data as { dropdown?: unknown } | undefined)?.dropdown;
+  const dropParent = Array.isArray(headerLinks) ? slugOfUrl((headerLinks as { url?: unknown; hasDropdown?: unknown }[]).find((l) => l.hasDropdown)?.url) : '';
+  const dropPages = Array.isArray(headerDrop) && dropParent ? (headerDrop as { url?: unknown }[]).map((d) => mainPages.find((p) => p.slug === slugOfUrl(d.url))).filter((p): p is Entry => !!p) : [];
+  // the Header or Footer an open page is listed under (it stays lit in the left list, and the page gets a way back)
+  const openedFrom = view?.t === 'page' ? (footerPages.some((p) => p.id === view.id) ? 'footer' : undefined) : undefined;
+  const openedFromType = openedFrom ? types?.find((x) => x.slug === openedFrom) : undefined;
+  const pageButton = (p: Entry, sub = false) => (
+    <button key={p.id} className={`tree-item${view?.t === 'page' && view.id === p.id ? ' on' : ''}${sub ? ' sub' : ''}`} onClick={() => setView({ t: 'page', id: p.id })}>
+      {iconFor(p.slug || titleOf(p, typeOf(p.contentTypeId)), 'page')}<span>{titleOf(p, typeOf(p.contentTypeId))}</span><Chevron />
+    </button>
+  );
 
   // Selecting a list type clears the selected document; a single document opens straight away.
   const openType = (t: ContentType) => {
@@ -77,6 +117,19 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
 
   const activeType = view?.t === 'type' ? typeOf(view.typeId) : undefined;
   const isList = activeType && activeType.kind !== 'singleton';
+  // Header and Footer open a column of their own: the document, its images and icons, and the pages linked from it
+  const container = activeType && (activeType.slug === 'header' || activeType.slug === 'footer') ? activeType : undefined;
+  const containerDoc = container ? entries.find((e) => e.contentTypeId === container.id) : undefined;
+  const containerImages = (container?.fields ?? []).filter((fl) => fl.type === 'image' || fl.type === 'icon');
+  const showContainer = !!container && (pagesOf(container.slug).length > 0 || containerImages.length > 0);
+  const fieldTitle = (fl: { name: string; label?: string }) => fl.label || (() => { const w = fl.name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase(); return w.charAt(0).toUpperCase() + w.slice(1); })();
+  const showField = (name: string) => {
+    const el = document.querySelector<HTMLElement>(`[data-field-path="page.${name}"]`);
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el.classList.add('fld-flash');
+    setTimeout(() => el.classList.remove('fld-flash'), 1400);
+  };
   const listDocs = isList ? entries.filter((e) => e.contentTypeId === activeType.id && (filter === 'ALL' || e.status === filter)) : [];
   const pageEntry = view?.t === 'page' ? entries.find((e) => e.id === view.id) : undefined;
   const pageType = view?.t === 'page' ? typeOf(pageEntry?.contentTypeId ?? '') : view?.t === 'new-page' ? pageTypes[0] : undefined;
@@ -90,11 +143,7 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
         </div>
         <div className="tree-group">
           {pageTypes.length > 0 && !pages.length && <p className="muted pad">No pages yet. Use + to add one.</p>}
-          {pages.map((p) => (
-            <button key={p.id} className={`tree-item${view?.t === 'page' && view.id === p.id ? ' on' : ''}`} onClick={() => setView({ t: 'page', id: p.id })}>
-              {iconFor(p.slug || titleOf(p, typeOf(p.contentTypeId)), 'page')}<span>{titleOf(p, typeOf(p.contentTypeId))}</span><Chevron />
-            </button>
-          ))}
+          {mainPages.filter((p) => !dropPages.includes(p)).flatMap((p) => [pageButton(p), ...(p.slug === dropParent ? dropPages.map((c) => pageButton(c, true)) : [])])}
           {lists.map((t) => (
             <button key={t.id} className={`tree-item${view?.t === 'type' && view.typeId === t.id ? ' on' : ''}`} onClick={() => openType(t)}>
               {iconFor(t.slug, 'collection')}<span>{t.name}</span><Chevron />
@@ -106,7 +155,7 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
             <div className="tree-divider" />
             <div className="tree-group">
               {singles.map((t) => (
-                <button key={t.id} className={`tree-item${view?.t === 'type' && view.typeId === t.id ? ' on' : ''}`} onClick={() => openType(t)}>
+                <button key={t.id} className={`tree-item${(view?.t === 'type' && view.typeId === t.id) || t.slug === openedFrom ? ' on' : ''}`} onClick={() => openType(t)}>
                   {iconFor(t.slug, 'singleton')}<span>{t.name}</span><Chevron />
                 </button>
               ))}
@@ -124,7 +173,35 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
           onSaved={async (saved) => { await reload(); setView({ t: 'page', id: saved.id }); }}
           onDeleted={async () => { const list = await reload(); const next = list.find((e) => pageTypes.some((t) => t.id === e.contentTypeId)); setView(next ? { t: 'page', id: next.id } : null); }}
           onRestored={async () => { await reload(); setRk((k) => k + 1); }}
+          back={openedFromType ? { label: openedFromType.name, onClick: () => openType(openedFromType) } : undefined}
         />
+      )}
+
+      {showContainer && container && (
+        <section className="pane pane-list">
+          <div className="pane-head"><h2 className="pane-title">{container.name}</h2></div>
+          <button className="doc-row on">
+            {iconFor(container.slug, 'singleton')}<span className="doc-title">{container.name}</span><span className="muted">links and text</span>
+          </button>
+          {containerImages.length > 0 && <p className="muted pad">Images and icons</p>}
+          {containerImages.map((fl) => {
+            const v = containerDoc?.data[fl.name];
+            const url = typeof v === 'string' ? v : '';
+            return (
+              <button key={fl.name} className="doc-row" onClick={() => showField(fl.name)}>
+                {url ? <img className="doc-thumb" src={url} alt="" /> : <span className="doc-thumb empty" />}
+                <span className="doc-title">{fieldTitle(fl)}</span>{!url && <span className="muted">not set</span>}
+              </button>
+            );
+          })}
+          {pagesOf(container.slug).length > 0 && <p className="muted pad">Pages in the {container.name.toLowerCase()}</p>}
+          {pagesOf(container.slug).map((p) => (
+            <button key={p.id} className="doc-row" onClick={() => setView({ t: 'page', id: p.id })}>
+              {iconFor(p.slug || titleOf(p, typeOf(p.contentTypeId)), 'page')}<span className="doc-title">{titleOf(p, typeOf(p.contentTypeId))}</span>
+              <span className={`dot ${p.status.toLowerCase()}`} title={p.status.toLowerCase()} />
+            </button>
+          ))}
+        </section>
       )}
 
       {isList && (

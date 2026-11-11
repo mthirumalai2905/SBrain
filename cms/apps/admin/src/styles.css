@@ -583,3 +583,25 @@ button.danger-btn:hover { background: #da3633; border-color: #da3633; }
 .hist-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 8px; border-bottom: 1px solid var(--line); }
 .hist-main { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
 .hist-main small { flex-basis: 100%; }
+
+
+
+
+/* A group of fields in the editor (for example one footer column) */
+.fld-group { margin: 0 0 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .02); }
+.fld-group > summary { cursor: pointer; padding: 11px 14px; font-weight: 600; list-style-position: inside; }
+.fld-group > summary:hover { background: var(--panel); border-radius: 12px; }
+.fld-group[open] > summary { border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
+.fld-group > .fld { padding: 0 14px; }
+.fld-group > .fld:first-of-type { margin-top: 12px; }
+.fld-group > .fld:last-child { padding-bottom: 6px; }
+
+/* Header and Footer column: image thumbnails, and the flash when a field is pointed to */
+.doc-thumb { flex: none; width: 34px; height: 34px; border-radius: 8px; object-fit: contain; background: var(--panel-2); border: 1px solid var(--line); }
+.doc-thumb.empty { display: inline-block; border-style: dashed; }
+.fld-flash { animation: fld-flash 1.4s ease-out; }
+@keyframes fld-flash { 0%, 40% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 10px; } 100% { box-shadow: 0 0 0 3px transparent; } }
+
+
+/* The tools under Our Tools & Services are indented in the page list */
+.tree-item.sub { margin-left: 22px; width: calc(100% - 22px); }

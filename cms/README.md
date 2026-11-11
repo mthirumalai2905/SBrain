@@ -141,3 +141,7 @@ Tools: `get_site`, `list_documents`, `get_document`, `create_draft_copy`, `creat
 - **Bell** (top bar): shows who added, edited, published or deleted something on the site, including changes made by AI tools (shown as "Claude (AI)", "Cursor (AI)" and so on). The badge counts changes by other people since you last opened it.
 - **Email**: members of a site get one email per batch of changes (sent a minute after the first one), never about their own changes. Each person can turn it off in the bell menu. It needs an SMTP account: set `SMTP_HOST` (and `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`) in `apps/api/.env`, see `.env.example`. Without it nothing is sent and the changes wait for up to a day.
 - **History** (button in every page and document): every save is kept (the latest 60 per document), with who made it and what changed. **Restore** puts an older version back. The page keeps its current status, and the restore is itself added to the history so it can be undone. The history of a deleted document is kept too.
+
+## Synx Tools site
+
+`apps/synx-tools` is the Synx Tools website (port 5181), the design of the Synx project rebuilt as a React app that reads all its pages, header, footer, articles and team from this CMS (site "Synx Tools"). `npm run dev` starts it with the others, or `npm run dev:synx` on its own. It needs `apps/synx-tools/.env.local` with `VITE_CMS_URL` and the site delivery key (`VITE_CMS_KEY`, see Settings), and the site's Preview URL set to `http://localhost:5181` for Live preview and click to edit. See `apps/synx-tools/AGENTS.md`.
