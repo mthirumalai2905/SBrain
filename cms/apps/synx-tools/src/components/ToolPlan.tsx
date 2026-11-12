@@ -188,7 +188,8 @@ function CmsIcon({ name }: { name: string }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{paths.map((d, i) => <path key={i} d={d} />)}</svg>;
 }
 
-export function ToolPlan({ slug, linked = true, cms = {}, name }: { slug: Slug; linked?: boolean; cms?: CmsPlan; name?: string }) {
+export function ToolPlan({ slug, linked = true, cms = {}, name, editKey }: { slug: Slug; linked?: boolean; cms?: CmsPlan; name?: string; editKey?: string }) {
+  const ed = (field: string, image = false) => (editKey ? { [image ? "data-synx-image" : "data-synx-edit"]: `${editKey}.${field}` } : {});
   const base = plans[slug];
   const plan = {
     name: name ?? cms.name ?? base.name,
@@ -204,23 +205,23 @@ export function ToolPlan({ slug, linked = true, cms = {}, name }: { slug: Slug; 
   };
   const body = (
     <>
-      <img src={plan.image} alt="" />
+      <img src={plan.image} alt="" {...ed("image", true)} />
       <h3>{plan.name}</h3>
-      <div className="tag">{plan.tag}</div>
-      <p className="lead">{plan.lead}</p>
+      <div className="tag" {...ed("tag")}>{plan.tag}</div>
+      <p className="lead" {...ed("lead")}>{plan.lead}</p>
       <ul>
-        {plan.rows.map((row) => (
+        {plan.rows.map((row, i) => (
           <li key={row.title}>
             <span className="mark" aria-hidden="true">{row.icon}</span>
             <span>
-              <strong>{row.title}</strong>
-              <span>{row.text}</span>
+              <strong {...ed(`rows.${i}.title`)}>{row.title}</strong>
+              <span {...ed(`rows.${i}.text`)}>{row.text}</span>
             </span>
             <i className="go"></i>
           </li>
         ))}
       </ul>
-      {linked ? <span className="btn btn-ghost">{plan.about}</span> : null}
+      {linked ? <span className="btn btn-ghost" {...ed("aboutLabel")}>{plan.about}</span> : null}
     </>
   );
 

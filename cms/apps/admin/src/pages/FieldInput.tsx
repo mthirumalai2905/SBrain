@@ -42,7 +42,7 @@ export function FieldInput({ site, f, value, onChange, path }: { site: Site; f: 
     case 'date':
       return <input type="date" value={s.slice(0, 10)} onChange={(e) => onChange(e.target.value)} />;
     case 'select':
-      return <select value={s} onChange={(e) => onChange(e.target.value)}><option value="" />{f.options?.map((o) => <option key={o}>{o}</option>)}</select>;
+      return <select value={s} onChange={(e) => onChange(e.target.value)}><option value="">{f.required ? "Choose…" : "None"}</option>{f.options?.map((o) => <option key={o}>{o}</option>)}</select>;
     case 'json':
       return <textarea rows={6} defaultValue={value === undefined ? '' : JSON.stringify(value, null, 2)} onBlur={(e) => { try { onChange(e.target.value ? JSON.parse(e.target.value) : null); } catch { alert('Invalid JSON'); } }} />;
     case 'image':

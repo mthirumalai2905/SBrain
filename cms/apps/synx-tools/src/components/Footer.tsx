@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import Link from "@/lib/Link";
 import { FooterFilm } from "@/components/HeroFilm";
-import { editDoc, mediaUrl, useShared } from "@/lib/cms";
+import { mediaUrl, useEditDoc, useShared } from "@/lib/cms";
 
 function DiscordMark() {
   return (
@@ -42,7 +42,7 @@ function Wave() {
 
 type FooterLink = { column?: string; label: string; url: string; newTab?: boolean };
 
-const anchor = (l: FooterLink, extra?: Record<string, string>) =>
+const anchor = (l: FooterLink, extra?: Record<string, unknown>) =>
   l.newTab || /^https?:/.test(l.url) ? (
     <a href={l.url} target="_blank" rel="noreferrer" {...extra}>{l.label}</a>
   ) : (
@@ -51,6 +51,7 @@ const anchor = (l: FooterLink, extra?: Record<string, string>) =>
 
 export function Footer({ tone, film = false }: { tone?: "dns" | "bios" | "pass" | "skalle"; film?: boolean }) {
   const { footer: f = {} } = useShared();
+  const ed = useEditDoc("footer");
   const columns = [1, 2, 3, 4].map((n) => ({ n, title: f[`column${n}Title`] as string | undefined, links: (f[`column${n}Links`] ?? []) as FooterLink[] })).filter((c) => c.title || c.links.length);
   const signLinks: FooterLink[] = f.signLinks ?? [];
   const legalLinks: FooterLink[] = f.legalLinks ?? [];
@@ -62,17 +63,17 @@ export function Footer({ tone, film = false }: { tone?: "dns" | "bios" | "pass" 
         <div className="footer-top">
           <div className="footer-brand">
             <div className="footer-logo">
-              <img src={mediaUrl(f.symbol) ?? "/img/symbol.png"} alt="" data-synx-image="page.symbol" />
-              <span {...editDoc("brandName")}>{f.brandName}</span>
+              <img src={mediaUrl(f.symbol) ?? "/img/symbol.png"} alt="" {...ed.image("symbol")} />
+              <span {...ed.text("brandName")}>{f.brandName}</span>
             </div>
-            <p {...editDoc("brandText")}>{f.brandText}</p>
-            <p className="footer-note" {...editDoc("brandNote")}>{f.brandNote}</p>
+            <p {...ed.text("brandText")}>{f.brandText}</p>
+            <p className="footer-note" {...ed.text("brandNote")}>{f.brandNote}</p>
           </div>
           <div className="footer-cols">
             {columns.map((c) => (
               <div key={c.n}>
-                <h4 {...editDoc(`column${c.n}Title`)}>{c.title}</h4>
-                {c.links.map((l, i) => <Fragment key={i}>{anchor(l, { "data-synx-edit": `page.column${c.n}Links.${i}.label` })}</Fragment>)}
+                <h4 {...ed.text(`column${c.n}Title`)}>{c.title}</h4>
+                {c.links.map((l, i) => <Fragment key={i}>{anchor(l, ed.text(`column${c.n}Links.${i}.label`))}</Fragment>)}
               </div>
             ))}
           </div>
@@ -80,8 +81,8 @@ export function Footer({ tone, film = false }: { tone?: "dns" | "bios" | "pass" 
         <div className="footer-discord">
           <DiscordMark />
           <span>
-            <strong {...editDoc("communityTitle")}>{f.communityTitle}</strong>
-            <small {...editDoc("communityText")}>{f.communityText}</small>
+            <strong {...ed.text("communityTitle")}>{f.communityTitle}</strong>
+            <small {...ed.text("communityText")}>{f.communityText}</small>
           </span>
           <span className="footer-discord-actions">
             <a href={f.communityUrl} target="_blank" rel="noreferrer">{f.communityButton}</a>
@@ -89,17 +90,17 @@ export function Footer({ tone, film = false }: { tone?: "dns" | "bios" | "pass" 
         </div>
         <div className="footer-close">
           <div className="footer-sign">
-            <p className="footer-sign-line" {...editDoc("signLine")}>{f.signLine}</p>
+            <p className="footer-sign-line" {...ed.text("signLine")}>{f.signLine}</p>
             <div className="footer-sign-links">
               {signLinks.map((l, i) => <Fragment key={i}>{anchor(l)}</Fragment>)}
             </div>
-            <p className="footer-sign-co" {...editDoc("companyLine")}>{f.companyLine}</p>
-            <p className="footer-sign-note" {...editDoc("signNote")}>
+            <p className="footer-sign-co" {...ed.text("companyLine")}>{f.companyLine}</p>
+            <p className="footer-sign-note" {...ed.text("signNote")}>
               {note.map((line, i) => (i ? [<br key={"b" + i} />, line] : line))}
             </p>
           </div>
           <div className="legal">
-            <span {...editDoc("copyright")}>{f.copyright}</span>
+            <span {...ed.text("copyright")}>{f.copyright}</span>
             <div className="legal-links">
               {legalLinks.map((l, i) => <Fragment key={i}>{anchor(l)}</Fragment>)}
             </div>

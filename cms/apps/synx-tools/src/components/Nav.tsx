@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "@/lib/Link";
 import { usePathname } from "@/lib/router";
-import { editDoc, mediaUrl, useShared } from "@/lib/cms";
+import { mediaUrl, useEditDoc, useShared } from "@/lib/cms";
 import { NavSkalle } from "@/components/NavSkalle";
 
 export function Nav({ film = false }: { film?: boolean }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const { header = {} } = useShared();
+  const ed = useEditDoc("header");
   const links: { label: string; url: string; hasDropdown?: boolean }[] = header.links ?? [];
   const dropdown: { label: string; url: string; tone?: string }[] = header.dropdown ?? [];
 
@@ -26,23 +27,23 @@ export function Nav({ film = false }: { film?: boolean }) {
     <header className={`nav${film ? " film" : ""}${open ? " open" : ""}`} id="nav">
       <div className="nav-inner">
         <Link className="brand" href="/" aria-label="Synx tools">
-          <img className="wordmark" src={mediaUrl(header.wordmark) ?? "/img/wordmark.png"} alt={header.wordmarkAlt ?? "Synx Tools"} data-synx-image="page.wordmark" />
+          <img className="wordmark" src={mediaUrl(header.wordmark) ?? "/img/wordmark.png"} alt={header.wordmarkAlt ?? "Synx Tools"} {...ed.image("wordmark")} />
         </Link>
         <nav className="nav-links" id="menu" onClick={() => setOpen(false)}>
           {links.map((link, i) =>
             link.hasDropdown ? (
               <div className="nav-drop" key={link.url}>
-                <Link href={link.url} aria-current={path === link.url ? "page" : undefined} {...editDoc(`links.${i}.label`)}>
+                <Link href={link.url} aria-current={path === link.url ? "page" : undefined} {...ed.text(`links.${i}.label`)}>
                   {link.label}
                 </Link>
                 <div className="nav-drop-menu">
                   {dropdown.map((d, j) => (
-                    <Link className={d.tone} href={d.url} key={d.url} {...editDoc(`dropdown.${j}.label`)}>{d.label}</Link>
+                    <Link className={d.tone} href={d.url} key={d.url} {...ed.text(`dropdown.${j}.label`)}>{d.label}</Link>
                   ))}
                 </div>
               </div>
             ) : (
-              <Link href={link.url} key={link.url} aria-current={path === link.url ? "page" : undefined} {...editDoc(`links.${i}.label`)}>
+              <Link href={link.url} key={link.url} aria-current={path === link.url ? "page" : undefined} {...ed.text(`links.${i}.label`)}>
                 {link.label}
               </Link>
             ),

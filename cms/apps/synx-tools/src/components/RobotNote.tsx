@@ -7,10 +7,12 @@ export function RobotNote({
   src,
   side,
   lines,
+  editPath,
 }: {
   src: string;
   side: "left" | "right";
   lines: readonly [string, string];
+  editPath?: string;
 }) {
   const root = useRef<HTMLElement>(null);
   const script = lines.join("\n");
@@ -46,7 +48,7 @@ export function RobotNote({
   const shown = script.slice(0, count);
 
   return (
-    <aside className={`robot-note ${side}`} ref={root} aria-label={lines.join(" ")}>
+    <aside className={`robot-note ${side}`} ref={root} aria-label={lines.join(" ")} {...(editPath ? { "data-synx-edit": editPath } : {})}>
       <button type="button" className="robot-hit" onClick={startMatrixRain} aria-label="Wake the robot">
         <img src={src} alt="" />
       </button>

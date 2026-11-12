@@ -166,6 +166,8 @@ function orderColumns(columns: Post[][]) {
 
 type FeedProps = {
   posts: Post[];
+  /** the section key in the CMS, so the headings can be clicked to edit in the preview */
+  editKey?: string;
   only?: Category;
   expanded?: boolean;
   page?: boolean;
@@ -176,6 +178,7 @@ type FeedProps = {
 
 export function LinkedInFeed({
   posts,
+  editKey,
   only,
   expanded = false,
   page = false,
@@ -183,6 +186,7 @@ export function LinkedInFeed({
   title = "Signals from Synx",
   intro = "From the people building Synx. The tools, the work, and the partnerships taking the Real Time Web from an idea into a network.",
 }: FeedProps) {
+  const mark = (field: string) => (editKey ? { "data-synx-edit": `${editKey}.${field}` } : {});
   const [open, setOpen] = useState(expanded);
   const wallRef = useRef<HTMLDivElement>(null);
   const [cut, setCut] = useState<number | null>(null);
@@ -209,9 +213,9 @@ export function LinkedInFeed({
     <section className={page ? "feed feed-page" : "feed"} id="feed" aria-label="Posts">
       <div className="wrap">
         <div className="feed-head">
-          <div className="section-kicker">{kicker}</div>
-          <Heading>{title}</Heading>
-          <p>{intro}</p>
+          <div className="section-kicker" {...mark("kicker")}>{kicker}</div>
+          <Heading {...mark("heading")}>{title}</Heading>
+          <p {...mark("intro")}>{intro}</p>
         </div>
         <div className={folded ? "feed-fold is-closed" : "feed-fold"}>
           <div className="feed-wall" ref={wallRef} style={folded && cut ? { maxHeight: cut } : undefined}>

@@ -58,7 +58,7 @@ export function ConfirmHost() {
     <div className="overlay" onClick={() => answer(false)}>
       <div className="dialog confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-msg" onClick={(e) => e.stopPropagation()}>
         <div className="confirm-body">
-          <span className={`confirm-icon ${danger ? 'danger' : 'info'}`} aria-hidden>{danger ? '!' : '↑'}</span>
+          <span className={`confirm-icon ${danger ? 'danger' : 'info'}`} aria-hidden>{danger ? '!' : 'i'}</span>
           <div>
             <h3 id="confirm-title">{current.title}</h3>
             {current.message && <p id="confirm-msg" className="muted">{current.message}</p>}

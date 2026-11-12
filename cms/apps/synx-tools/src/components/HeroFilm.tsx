@@ -10,7 +10,7 @@ function markup(src: string) {
   return `<video src="${src}" muted playsinline webkit-playsinline="true" autoplay loop preload="auto"></video>`;
 }
 
-function Film({ className, defer = false }: { className: string; defer?: boolean }) {
+function Film({ className, defer = false, editPath }: { className: string; defer?: boolean; editPath?: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const src = mediaUrl(useShared().film) ?? "";
 
@@ -55,6 +55,7 @@ function Film({ className, defer = false }: { className: string; defer?: boolean
       ref={boxRef}
       className={className}
       aria-hidden="true"
+      {...(editPath ? { "data-synx-image": editPath } : {})}
       dangerouslySetInnerHTML={defer ? undefined : { __html: markup(src) }}
     />
   );
@@ -154,8 +155,8 @@ function watch(video: HTMLVideoElement, stopped: () => boolean) {
   };
 }
 
-export function HeroFilm() {
-  return <Film className="hero-film" />;
+export function HeroFilm({ editPath }: { editPath?: string }) {
+  return <Film className="hero-film" editPath={editPath} />;
 }
 
 export function FooterFilm() {

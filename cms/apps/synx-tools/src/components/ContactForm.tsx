@@ -44,7 +44,7 @@ export function ContactForm({ c = {} }: { c?: Doc }) {
   const reduce = useReducedMotion();
 
   return (
-    <motion.form className="contact-form" onSubmit={onSubmit} {...(reduce ? {} : rise())}>
+    <motion.form className="contact-form" data-synx-key={c._key} onSubmit={onSubmit} {...(reduce ? {} : rise())}>
       <span className="tick tr" aria-hidden="true"></span>
       <span className="tick bl" aria-hidden="true"></span>
       {sent ? (

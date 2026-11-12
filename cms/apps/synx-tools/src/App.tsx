@@ -56,6 +56,7 @@ export default function App() {
       const m = (e as CustomEvent).detail as { contentType?: string; entry?: Doc } | undefined;
       const entry = m?.entry;
       if (!entry) return;
+      setShared((s) => (s && s.previewing !== m.contentType ? { ...s, previewing: m.contentType } : s));
       if (m.contentType === "pages") { if ((entry.slug || "home") === route.slug) setDoc({ slug: route.slug, page: entry }); return; }
       setShared((s) => {
         if (!s) return s;
@@ -94,7 +95,7 @@ export default function App() {
   }
 
   let content: ReactNode = null;
-  if (route.kind === "article") content = article ? renderArticle(article) : renderNotFound();
+  if (route.kind === "article") content = article ? renderArticle(article, shared.previewing === "article") : renderNotFound();
   else if (doc) content = doc.page ? renderPage(doc.slug, doc.page, shared) : renderNotFound();
 
   const s = shared.settings ?? {};

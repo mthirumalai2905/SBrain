@@ -4,7 +4,7 @@ import { api, type ContentType, type Entry, type Section, type Site } from '../a
 import { FieldForm } from './FieldInput';
 import { AgentPanel, type Applied, type Proposal } from './AgentPanel';
 import { applyProposalTo, useAiOpen } from '../lib/assistant';
-import { History } from './History';
+import { setHistoryTarget } from '../lib/versions';
 
 type Status = 'DRAFT' | 'PUBLISHED';
 type Draft = Partial<Entry> & { contentTypeId: string };
@@ -63,7 +63,6 @@ export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved,
   const snapshot = (st = status) => JSON.stringify([data, sections, slug, st]);
   const [baseline, setBaseline] = useState(snapshot);
   const dirty = snapshot() !== baseline;
-  const [showHistory, setShowHistory] = useState(false);
   const base = `/sites/${site.id}/entries`;
   const def = (slugName: string) => sectionTypes.find((t) => t.slug === slugName);
 
@@ -148,6 +147,14 @@ export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved,
   );
 
   // AI assistant (drawer on the right): its changes land here as unsaved edits
+  // The Version history button in the top bar works on this document
+  const versionRef = useRef({ name: pageTitle, onRestored });
+  versionRef.current = { name: pageTitle, onRestored };
+  useEffect(() => {
+    if (!entry.id) return;
+    setHistoryTarget({ entryId: entry.id, canEdit, get name() { return versionRef.current.name; }, onRestored: (e) => versionRef.current.onRestored(e) });
+    return () => setHistoryTarget(null);
+  }, [entry.id, canEdit]);
   const [aiOpen, toggleAi] = useAiOpen();
   const live = useRef({ data, sections });
   live.current = { data, sections };
@@ -229,21 +236,17 @@ export function PageBuilder({ site, type, sectionTypes, entry, canEdit, onSaved,
           <header className="editor-bar">
             <h2>{current ? (firstText(currentDef, current.data) || currentDef?.name || 'Section') : pageTitle}</h2>
             <div className="chips">
-              <button className={`chip published${status === 'PUBLISHED' ? ' on' : ''}`} disabled={!canEdit} onClick={() => setStatus('PUBLISHED')}><i />Published</button>
-              <button className={`chip draft${status === 'DRAFT' ? ' on' : ''}`} disabled={!canEdit} onClick={() => setStatus('DRAFT')}><i />Draft</button>
+              <span className={`chip static ${status === 'PUBLISHED' ? 'published' : 'draft'} on`}><i />{status === 'PUBLISHED' ? 'Published' : 'Draft'}</span>
+{canEdit && status === 'PUBLISHED' && <button className="link unpublish" onClick={() => setStatus('DRAFT')}>Unpublish</button>}
             </div>
             <div className="grow" />
-            {canEdit && <button className={`ai-toggle${aiOpen ? ' on' : ''}`} aria-pressed={aiOpen} onClick={toggleAi}>✦ AI assistant</button>}
-            {entry.id && <button className="link" onClick={() => setShowHistory(true)}>History</button>}
             {canEdit && entry.id && <button className="link delete-link" onClick={async () => { if (await ask({ title: 'Delete this page?', message: 'The page and all its sections are removed permanently and cannot be undone.', confirmLabel: 'Delete page' })) { await api(`${base}/${entry.id}`, { method: 'DELETE' }); onDeleted(); } }}>Delete page</button>}
-            {canEdit && dirty && !saving && <span className="muted">Unsaved changes</span>}
-            {canEdit && <button disabled={saving || !dirty} onClick={() => save()}>{saving ? 'Saving…' : 'Save'}</button>}
+            {canEdit && <button className={dirty ? 'dirty' : ''} title={dirty ? 'You have unsaved changes' : undefined} disabled={saving || !dirty} onClick={() => save()}>{saving ? 'Saving…' : 'Save'}</button>}
             {canEdit && <button className="primary" disabled={saving || !dirty} onClick={async () => { if (await ask({ title: 'Publish changes?', message: 'They go live on the site right away.', confirmLabel: 'Publish', tone: 'primary' })) save(true); }}>Publish</button>}
           </header>
           <div className="editor-scroll">{form}</div>
         </div>
       </section>
-      {showHistory && entry.id && <History site={site} entryId={entry.id} name={pageTitle} canEdit={canEdit} onClose={() => setShowHistory(false)} onRestored={onRestored} />}
       {canEdit && (
         <aside className="ai-drawer" hidden={!aiOpen}>
           <AgentPanel site={site} typeSlug={type.slug} active={aiOpen} onClose={toggleAi} apply={applyProposal} onPublish={publish}

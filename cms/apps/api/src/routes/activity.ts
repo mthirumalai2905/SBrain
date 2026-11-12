@@ -4,6 +4,7 @@ import { prisma } from '../db.js';
 import { requireSite } from '../auth.js';
 import { actorOf, recordChange } from '../activity.js';
 import { mailConfigured, sendTest } from '../mailer.js';
+import { diffDocs } from '../agent/publish.js';
 
 /** The bell (recent changes, email setting) and version history of a document. */
 export default async function (app: FastifyInstance) {
@@ -32,10 +33,38 @@ export default async function (app: FastifyInstance) {
     return { ok: true };
   });
 
+  /**
+   * The saved versions of a document, newest first. Each one says who made it (their current name), when, and what changed
+   * compared with the version before it, field by field.
+   */
   app.get('/sites/:siteId/entries/:id/versions', { preHandler: requireSite('VIEWER') }, async (req) => {
     const { siteId, id } = req.params as { siteId: string; id: string };
     const rows = await prisma.entryVersion.findMany({ where: { siteId, entryId: id }, orderBy: { createdAt: 'desc' }, take: 60 });
-    return rows.map((v) => ({ id: v.id, action: v.action, summary: v.summary, status: v.status, actorName: v.actorName, source: v.source, createdAt: v.createdAt, title: v.title }));
+    const [types, users] = await Promise.all([
+      prisma.contentType.findMany({ where: { siteId } }),
+      prisma.user.findMany({ where: { id: { in: rows.map((r) => r.actorId).filter((x): x is string => !!x) } }, select: { id: true, name: true } }),
+    ]);
+    const sectionName = (slug: string) => types.find((t) => t.slug === slug)?.name ?? slug;
+    const label = (st: string) => (st === 'PUBLISHED' ? 'Published' : 'Draft');
+    return rows.map((v, i) => {
+      const prev = rows[i + 1];
+      const kind = types.find((t) => t.name === v.typeName)?.kind;
+      const changes: { kind: string; where: string; field?: string; from?: string; to?: string }[] = [];
+      if (prev) {
+        if (prev.status !== v.status) changes.push({ kind: 'edit', where: 'Status', from: label(prev.status), to: label(v.status) });
+        if ((prev.slug ?? '') !== (v.slug ?? '')) changes.push({ kind: 'edit', where: 'Address', from: prev.slug ?? '', to: v.slug ?? '' });
+        changes.push(...diffDocs(prev.data as Record<string, unknown>, v.data as Record<string, unknown>, sectionName, kind === 'page' ? 'Page settings' : v.typeName));
+      } else if (v.action === 'created') {
+        const n = Array.isArray((v.data as { sections?: unknown[] }).sections) ? (v.data as { sections: unknown[] }).sections.length : 0;
+        if (n) changes.push({ kind: 'add', where: `${n} section${n === 1 ? '' : 's'}` });
+      }
+      return {
+        id: v.id, action: v.action, summary: v.summary, status: v.status, source: v.source, title: v.title, createdAt: v.createdAt,
+        // their name as it is now, so a person renamed since (or the built-in user) shows the right name on old versions too
+        actorName: users.find((u) => u.id === v.actorId)?.name ?? v.actorName,
+        changes: changes.slice(0, 40), changeCount: changes.length,
+      };
+    });
   });
 
   /** Puts an older version's content back. The document keeps its current status (a draft stays a draft). The restore itself becomes a new version. */

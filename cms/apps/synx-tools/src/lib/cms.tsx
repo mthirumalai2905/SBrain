@@ -12,7 +12,7 @@ export type Doc = { [field: string]: any };
 /** One section of a page, flattened by the CMS: its fields plus `_key` and `_type`. */
 export type Sec = { _key: string; _type: string; [field: string]: any };
 
-export type Shared = { header?: Doc; footer?: Doc; settings?: Doc; articles: Doc[]; team: Doc[]; film?: string };
+export type Shared = { header?: Doc; footer?: Doc; settings?: Doc; articles: Doc[]; team: Doc[]; film?: string; /** the content type the CMS is previewing right now (so header and footer are only editable when they are the open document) */ previewing?: string };
 
 async function get(path: string): Promise<any> {
   if (!CMS_URL || !KEY) return undefined;
@@ -77,6 +77,18 @@ export function applyTheme(settings?: Doc) {
 /** Edit marker for click-to-edit inside the CMS preview: `{...edit(s, "heading")}`. Harmless on the live site. */
 export const edit = (s: { _key: string }, field: string) => ({ "data-synx-edit": `${s._key}.${field}` });
 export const editImage = (s: { _key: string }, field: string) => ({ "data-synx-image": `${s._key}.${field}` });
+/**
+ * Edit markers for a shared document (header, footer). Click-to-edit paths are relative to the document open in the CMS, so these
+ * only appear while that document is the one being previewed; otherwise a click would point at the wrong page.
+ */
+export function useEditDoc(type: string) {
+  const on = useContext(SharedContext).previewing === type;
+  return {
+    text: (field: string) => (on ? { "data-synx-edit": `page.${field}` } : {}),
+    image: (field: string) => (on ? { "data-synx-image": `page.${field}` } : {}),
+  };
+}
+
 /** Singletons (header, footer, settings) are edited by their field name alone. */
 export const editDoc = (field: string) => ({ "data-synx-edit": `page.${field}` });
 

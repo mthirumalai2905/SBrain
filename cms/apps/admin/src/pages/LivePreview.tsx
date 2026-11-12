@@ -4,10 +4,12 @@ import { FieldForm } from './FieldInput';
 import { MediaPicker } from './MediaPicker';
 import { IconPicker } from './IconPicker';
 import { AgentPanel, type Applied, type Proposal } from './AgentPanel';
-import { applyProposalTo } from '../lib/assistant';
+import { applyProposalTo, useAiOpen } from '../lib/assistant';
 import { Preview, type PreviewSelect } from './Preview';
 import { focusPath } from '../lib/focus';
 import { setAtPath } from '../lib/path';
+import { setHistoryTarget } from '../lib/versions';
+import { getSelectedDoc } from '../lib/selection';
 import { ask } from '../lib/confirm';
 
 type Status = 'DRAFT' | 'PUBLISHED';
@@ -31,7 +33,8 @@ const firstText = (t: ContentType | undefined, d: Record<string, unknown>) => {
 export function LivePreview({ site, canEdit }: { site: Site; canEdit: boolean }) {
   const [types, setTypes] = useState<ContentType[] | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [docKey, setDocKey] = useState('');
+  const [docKey, setDocKey] = useState(() => getSelectedDoc() ?? '');
+  const [rk, setRk] = useState(0); // bumped after a restore so the editor reloads the restored content
   const base = `/sites/${site.id}`;
 
   const reload = async () => setEntries(await api<Entry[]>(`${base}/entries`));
@@ -63,16 +66,16 @@ export function LivePreview({ site, canEdit }: { site: Site; canEdit: boolean })
 
   return (
     <div className="live">
-      <div className="live-bar">
-        <label className="lbl" htmlFor="live-doc">Previewing</label>
-        <select id="live-doc" value={doc.key} onChange={(e) => setDocKey(e.target.value)}>
-          {(['Pages', 'Content'] as const).map((g) => docs.some((d) => d.group === g) && (
-            <optgroup key={g} label={g}>{docs.filter((d) => d.group === g).map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}</optgroup>
-          ))}
-        </select>
-      </div>
       <LiveEditor
-        key={`${doc.type.id}:${doc.entry?.id ?? 'new'}`}
+        key={`${doc.type.id}:${doc.entry?.id ?? 'new'}:${rk}`}
+        label={doc.label}
+        onNavigate={(path) => {
+          // a link was clicked in the site: open the page it leads to (home is "/", the other pages are "/<slug>")
+          const clean = path.replace(/\/+$/, '') || '/';
+          const hit = docs.find((d) => d.type.kind === 'page' && d.entry && (d.entry.slug === 'home' ? '/' : `/${d.entry.slug}`) === clean);
+          if (hit && hit.key !== doc.key) setDocKey(hit.key);
+        }}
+        onRestored={async () => { await reload(); setRk((k) => k + 1); }}
         site={site} type={doc.type} sectionTypes={sectionTypes} canEdit={canEdit}
         entry={doc.entry ?? { contentTypeId: doc.type.id, data: {}, status: 'DRAFT' }}
         onSaved={async (saved) => { await reload(); setDocKey(saved.id); }}
@@ -81,9 +84,18 @@ export function LivePreview({ site, canEdit }: { site: Site; canEdit: boolean })
   );
 }
 
-function LiveEditor({ site, type, sectionTypes, entry, canEdit, onSaved }: {
+function LiveEditor({ site, type, sectionTypes, entry, canEdit, onSaved, label, onRestored, onNavigate }: {
   site: Site; type: ContentType; sectionTypes: ContentType[]; entry: Draft; canEdit: boolean; onSaved: (e: Entry) => void;
+  label: string; onRestored: () => void; onNavigate: (path: string) => void;
 }) {
+  // The Version history button in the top bar works on this document
+  const versionRef = useRef({ label, onRestored });
+  versionRef.current = { label, onRestored };
+  useEffect(() => {
+    if (!entry.id) return;
+    setHistoryTarget({ entryId: entry.id, canEdit, get name() { return versionRef.current.label; }, onRestored: () => versionRef.current.onRestored() });
+    return () => setHistoryTarget(null);
+  }, [entry.id, canEdit]);
   const isPage = type.kind === 'page';
   const single = type.kind === 'singleton';
   const init = entry.data ?? {};
@@ -92,7 +104,9 @@ function LiveEditor({ site, type, sectionTypes, entry, canEdit, onSaved }: {
   const [slug, setSlug] = useState(entry.slug ?? '');
   const [status, setStatus] = useState<Status>(entry.status ?? 'DRAFT');
   const [sel, setSel] = useState<'page' | string>('page');
-  const [tab, setTab] = useState<'edit' | 'ai'>('edit');
+  const [aiOpen, toggleAi] = useAiOpen();
+  const tab: 'edit' | 'ai' = aiOpen ? 'ai' : 'edit'; // follows the AI assistant button in the top bar
+  const setTab = (t: 'edit' | 'ai') => { if ((t === 'ai') !== aiOpen) toggleAi(); };
   const [selPath, setSelPath] = useState<string | undefined>();
   const [picking, setPicking] = useState<string | null>(null);
   const [pickingIcon, setPickingIcon] = useState<string | null>(null);
@@ -181,7 +195,7 @@ function LiveEditor({ site, type, sectionTypes, entry, canEdit, onSaved }: {
   return (
     <div className="live-body">
       <Preview site={site} type={type} data={data} sections={isPage ? sections : undefined} sectionTypes={sectionTypes} slug={slug} status={status}
-        selectedKey={sel === 'page' ? undefined : sel} selectedPath={selPath} onSelectPath={onSelectPath} />
+        selectedKey={sel === 'page' ? undefined : sel} selectedPath={selPath} onSelectPath={onSelectPath} onNavigate={onNavigate} />
 
       <aside className="panel">
         {canEdit && (
@@ -196,8 +210,8 @@ function LiveEditor({ site, type, sectionTypes, entry, canEdit, onSaved }: {
         )}
         <div className="panel-top" hidden={tab !== 'edit'}>
           <div className="chips">
-            <button className={`chip published${status === 'PUBLISHED' ? ' on' : ''}`} disabled={!canEdit} onClick={() => setStatus('PUBLISHED')}><i />Published</button>
-            <button className={`chip draft${status === 'DRAFT' ? ' on' : ''}`} disabled={!canEdit} onClick={() => setStatus('DRAFT')}><i />Draft</button>
+            <span className={`chip static ${status === 'PUBLISHED' ? 'published' : 'draft'} on`}><i />{status === 'PUBLISHED' ? 'Published' : 'Draft'}</span>
+{canEdit && status === 'PUBLISHED' && <button className="link unpublish" onClick={() => setStatus('DRAFT')}>Unpublish</button>}
           </div>
           {isPage && (
             <select aria-label="What to edit" value={sel} onChange={(e) => { setSel(e.target.value); setSelPath(undefined); }}>

@@ -36,7 +36,7 @@ export function NewsletterInvite({ c = {} }: { c?: Doc }) {
   const reduce = useReducedMotion();
 
   return (
-    <motion.section className="invite" aria-label="Newsletter" {...(reduce ? {} : rise(0.08))}>
+    <motion.section className="invite" data-synx-key={c._key} aria-label="Newsletter" {...(reduce ? {} : rise(0.08))}>
       <div className={`invite-stage${sent ? " sent" : ""}`}>
         <div className="invite-rays" aria-hidden="true">
           <span className="invite-beam" />

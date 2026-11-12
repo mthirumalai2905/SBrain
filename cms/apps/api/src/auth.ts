@@ -13,12 +13,14 @@ declare module '@fastify/jwt' {
 // server.ts refuses to start with this on unless the API is bound to localhost.
 export const authDisabled = process.env.AUTH_DISABLED === 'true';
 let devUserId: string | undefined;
+/** The name shown for the built-in user while sign-in is off. Set DEV_USER_NAME in .env to change it. */
+const devName = process.env.DEV_USER_NAME?.trim() || 'Local admin';
 async function devUser() {
   if (devUserId) return devUserId;
   const u = await prisma.user.upsert({
     where: { email: 'local-admin@localhost' },
-    update: { isSuperAdmin: true },
-    create: { email: 'local-admin@localhost', name: 'Local admin', isSuperAdmin: true, passwordHash: '!' },
+    update: { isSuperAdmin: true, name: devName },
+    create: { email: 'local-admin@localhost', name: devName, isSuperAdmin: true, passwordHash: '!' },
   });
   return (devUserId = u.id);
 }

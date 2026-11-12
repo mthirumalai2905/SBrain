@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import type { ContentType, Field, Section } from '../api';
 import type { Change, Proposal } from '../pages/AgentPanel';
 import { setAtPath } from './path';
@@ -72,9 +72,18 @@ export function applyProposalTo(
   return { data, sections, lines, changes };
 }
 
-/** Whether the assistant drawer is open in Structure. Open the first time; after that it stays as you left it. */
+/**
+ * Whether the assistant panel is open. One setting for the whole app: the button in the top bar, the panel in Structure and the
+ * AI tab in Live preview all follow it. Closed the first time; after that it stays as you left it.
+ */
+let aiOpen = (() => { try { return localStorage.getItem('cms_ai_open') === '1'; } catch { return false; } })();
+const aiListeners = new Set<() => void>();
+const setAiOpen = (v: boolean) => {
+  aiOpen = v;
+  try { localStorage.setItem('cms_ai_open', v ? '1' : '0'); } catch { /* ignore */ }
+  aiListeners.forEach((f) => f());
+};
 export function useAiOpen(): [boolean, () => void] {
-  const [open, setOpen] = useState(() => { try { return localStorage.getItem('cms_ai_open') !== '0'; } catch { return true; } });
-  const toggle = () => setOpen((o) => { try { localStorage.setItem('cms_ai_open', o ? '0' : '1'); } catch { /* ignore */ } return !o; });
-  return [open, toggle];
+  const open = useSyncExternalStore((cb) => { aiListeners.add(cb); return () => { aiListeners.delete(cb); }; }, () => aiOpen, () => false);
+  return [open, () => setAiOpen(!aiOpen)];
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { mediaUrl, useShared } from "@/lib/cms";
+import { mediaUrl, useEditDoc, useShared } from "@/lib/cms";
 
 export function NavSkalle() {
   const { header = {} } = useShared();
+  const ed = useEditDoc("header");
   const lead: string = header.comingSoonLead ?? "Skalle AI";
   const line = `${lead}\u00A0${header.comingSoonText ?? "coming soon"}`;
   const root = useRef<HTMLDivElement>(null);
@@ -88,13 +89,13 @@ export function NavSkalle() {
         onFocus={show}
         onBlur={hide}
       >
-        <img src={mediaUrl(header.skalleAvatar) ?? "/img/robot-left.jpg"} alt="" />
+        <img src={mediaUrl(header.skalleAvatar) ?? "/img/robot-left.jpg"} alt="" {...ed.image("skalleAvatar")} />
       </button>
       <div className="nav-skalle-say" role="status">
         <span className="nav-skalle-notch" aria-hidden="true" />
         <div className="nav-skalle-who">
           <span className="nav-skalle-glyph">
-            <img src={mediaUrl(header.skalleGlyph) ?? "/img/skalle.png"} alt="" />
+            <img src={mediaUrl(header.skalleGlyph) ?? "/img/skalle.png"} alt="" {...ed.image("skalleGlyph")} />
           </span>
           <small>{header.skalleName ?? "Skalle"}</small>
           <i className="nav-skalle-live" aria-hidden="true" />

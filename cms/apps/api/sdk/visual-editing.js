@@ -49,10 +49,20 @@
     highlight(m.selectedKey, m.selectedPath);
   });
 
-  // Click-to-edit. In edit mode a click selects instead of following links.
+  // The page a link leads to, when it is another page of this same site (else null).
+  function internalPath(a) {
+    if (!a || a.target === '_blank' || a.hasAttribute('download')) return null;
+    try { var u = new URL(a.href, location.href); return u.origin === location.origin ? u.pathname : null; } catch (err) { return null; }
+  }
+
+  // Click-to-edit. In edit mode a click on text or an image you can edit selects it. A click on a link to another page of the
+  // site opens that page (and tells the CMS, so its editor follows). Anything else in edit mode selects the section.
   document.addEventListener('click', function (e) {
-    if (!editing || !e.target || !e.target.closest) return;
-    var field = e.target.closest('[data-synx-edit],[data-synx-image]');
+    if (!e.target || !e.target.closest) return;
+    var field = editing ? e.target.closest('[data-synx-edit],[data-synx-image]') : null;
+    var path = field ? null : internalPath(e.target.closest('a[href]'));
+    if (path !== null) { post({ kind: 'navigate', path: path }); return; }
+    if (!editing) return;
     var sec = e.target.closest('[data-synx-key]');
     if (!field && !sec) return;
     e.preventDefault();

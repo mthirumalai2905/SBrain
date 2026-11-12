@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import Link from "@/lib/Link";
-import { edit, editDoc, editImage, mediaUrl, type Doc, type Sec, type Shared } from "@/lib/cms";
-import { taglineAt, type HeroTagline } from "@/lib/heroTaglines";
+import { edit, editImage, mediaUrl, type Doc, type Sec, type Shared } from "@/lib/cms";
+import { taglineAt, taglineIndexAt, type HeroTagline } from "@/lib/heroTaglines";
 import type { ArticleBlock } from "@/lib/article";
 import type { Category, Post } from "@/lib/posts";
 import { readingLabel, readingMinutes } from "@/lib/readingTime";
@@ -74,6 +74,7 @@ const robotNote = (s: Sec) => (
     side={s.side === "right" ? "right" : "left"}
     src={mediaUrl(s.image) ?? (s.side === "right" ? "/img/robot-right.jpg" : "/img/robot-left.jpg")}
     lines={[text(s.lineOne), text(s.lineTwo)] as const}
+    editPath={`${s._key}.lineOne`}
   />
 );
 
@@ -120,7 +121,7 @@ function textBlock(s: Sec, o: { spanItems?: boolean; wrap?: boolean; linkLast?: 
 function essayItem(s: Sec, slug: string, o: { spanItems?: boolean; wrap?: boolean; linkLast?: { label: string; url: string } } = {}): ReactNode {
   switch (s._type) {
     case "text-block": return textBlock(s, o);
-    case "stance": return <Stance key={s._key} speaker={s.speaker === "Skalle" ? "skalle" : undefined}>{text(s.text)}</Stance>;
+    case "stance": return <Stance key={s._key} speaker={s.speaker === "Skalle" ? "skalle" : undefined} editPath={`${s._key}.text`}>{text(s.text)}</Stance>;
     case "robot-note": return robotNote(s);
     case "figure":
       return (
@@ -214,7 +215,7 @@ function toolsGrid(s: Sec): ReactNode {
               <Link key={i} className={`card ${c.tone}`} href={c.url}>
                 <h3 {...edit(s, `cards.${i}.title`)}>{c.title}</h3>
                 <p {...edit(s, `cards.${i}.text`)}>{c.text}</p>
-                <img className="tool-mark" src={mediaUrl(c.image)} alt="" />
+                <img className="tool-mark" src={mediaUrl(c.image)} alt="" {...editImage(s, `cards.${i}.image`)} />
                 <div className="glow" aria-hidden="true"></div>
               </Link>
             ))}
@@ -235,7 +236,7 @@ function suitePair(s: Sec): ReactNode {
             <p {...edit(s, "leftText")}>{s.leftText}</p>
             <div className="pair-marks">
               {list(s.marks).map((m, i) => (
-                <Link key={i} className={m.tone} href={m.url}><img src={mediaUrl(m.image)} alt={m.alt} /></Link>
+                <Link key={i} className={m.tone} href={m.url}><img src={mediaUrl(m.image)} alt={m.alt} {...editImage(s, `marks.${i}.image`)} /></Link>
               ))}
             </div>
           </article>
@@ -421,14 +422,14 @@ function body(slug: string, sections: Sec[], shared: Shared): ReactNode[] {
         out.push(
           <section key={s._key} className={`tool-hero ${slug}`} data-synx-key={s._key}>
             <div className="tool-radiance" aria-hidden="true"></div>
-            <ToolHero tool={{ slug: slug as Tool, name: text(s.name), lead: text(s.lead) }} logo={mediaUrl(s.logo)} />
+            <ToolHero tool={{ slug: slug as Tool, name: text(s.name), lead: text(s.lead) }} logo={mediaUrl(s.logo)} editKey={s._key} />
           </section>,
         );
         break;
       case "tool-plan":
         out.push(
           <section key={s._key} className="tool-plan" data-synx-key={s._key}>
-            <ToolPlan slug={slug as Tool} linked={false} cms={s as never} name={text(sections.find((x) => x._type === "tool-hero")?.name) || undefined} />
+            <ToolPlan slug={slug as Tool} linked={false} cms={s as never} editKey={s._key} name={text(sections.find((x) => x._type === "tool-hero")?.name) || undefined} />
           </section>,
         );
         break;
@@ -460,6 +461,7 @@ function body(slug: string, sections: Sec[], shared: Shared): ReactNode[] {
             kicker={s.kicker}
             title={s.heading}
             intro={s.intro}
+            editKey={s._key}
           />,
         );
         break;
@@ -529,9 +531,9 @@ export function renderPage(slug: string, page: Doc, shared: Shared): ReactNode {
       <>
         <main className="home" id="top">
           <section className="hero" data-synx-key={hero?._key}>
-            <HeroFilm />
+            <HeroFilm editPath={hero ? `${hero._key}.backgroundVideo` : undefined} />
             <Nav film />
-            {taglines.length ? <HeroCopy tagline={taglineAt(taglines)} /> : null}
+            {taglines.length ? <HeroCopy tagline={taglineAt(taglines)} editBase={hero ? `${hero._key}.taglines.${taglineIndexAt(taglines.length)}` : undefined} /> : null}
           </section>
           {body("home", rest, shared)}
         </main>
@@ -563,7 +565,8 @@ export function renderNotFound(): ReactNode {
 }
 
 /** An article page at /news/<slug>. */
-export function renderArticle(a: Doc): ReactNode {
+export function renderArticle(a: Doc, editable = false): ReactNode {
+  const editA = (field: string, image = false) => (editable ? { [image ? "data-synx-image" : "data-synx-edit"]: `page.${field}` } : {});
   const blocks: ArticleBlock[] = list(a.blocks).map((b) =>
     b.type === "figure" ? { type: "figure", src: mediaUrl(b.image) ?? "", alt: text(b.alt) }
     : b.type === "note" ? { type: "note", side: b.side === "right" ? "right" : "left", lines: [text(b.lineOne), text(b.lineTwo)] as const }
@@ -577,11 +580,11 @@ export function renderArticle(a: Doc): ReactNode {
       <Nav />
       <main>
         <section className={fit ? "news-hero fit" : "news-hero"}>
-          <img className={fit ? "news-banner pair" : "news-banner"} src={mediaUrl(a.heroImage)} alt="" {...editDoc("heroImage")} />
+          <img className={fit ? "news-banner pair" : "news-banner"} src={mediaUrl(a.heroImage)} alt="" {...editA("heroImage", true)} />
           <div className="wrap">
             <p className="section-kicker">{a.category}</p>
-            <h1 {...editDoc("title")}>{a.title}</h1>
-            {a.dek ? <p className="news-dek" {...editDoc("dek")}>{a.dek}</p> : null}
+            <h1 {...editA("title")}>{a.title}</h1>
+            {a.dek ? <p className="news-dek" {...editA("dek")}>{a.dek}</p> : null}
             <p className="news-by">{a.author} · {readingLabel(readingMinutes(words))}{a.dateLabel ? ` · ${a.dateLabel}` : ""}</p>
           </div>
         </section>

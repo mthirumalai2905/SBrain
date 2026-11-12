@@ -11,7 +11,7 @@ function spoken(text: string) {
     .join("\n");
 }
 
-export function Stance({ children }: { children: string; speaker?: "skalle" }) {
+export function Stance({ children, editPath }: { children: string; speaker?: "skalle"; editPath?: string }) {
   const root = useRef<HTMLElement>(null);
   const script = spoken(children);
   const [count, setCount] = useState(0);
@@ -46,7 +46,7 @@ export function Stance({ children }: { children: string; speaker?: "skalle" }) {
   const shown = script.slice(0, count);
 
   return (
-    <figure className="robot-note stance-said left" ref={root} aria-label={children}>
+    <figure className="robot-note stance-said left" ref={root} aria-label={children} {...(editPath ? { "data-synx-edit": editPath } : {})}>
       <button type="button" className="robot-hit" onClick={startMatrixRain} aria-label="Wake the robot">
         <img src="/img/robot-left.jpg" alt="" />
       </button>

@@ -188,6 +188,13 @@ export function AgentPanel({ site, typeSlug, getDoc, apply, onPublish, active, o
   const [waited, setWaited] = useState(0);
   const end = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLTextAreaElement>(null);
+  const [plusOpen, setPlusOpen] = useState(false);
+  useEffect(() => {
+    if (!plusOpen) return;
+    const close = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest(".ag-plus")) setPlusOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [plusOpen]);
 
   const [infoErr, setInfoErr] = useState('');
   // Which models are ready. Loaded when the panel opens, retried on its own if the server was busy restarting, and
@@ -350,14 +357,29 @@ export function AgentPanel({ site, typeSlug, getDoc, apply, onPublish, active, o
             ref={box}
             rows={1}
             value={text}
-            placeholder={ready ? 'Ask for a change, or paste a Google Doc link…' : info ? 'Add an AI key to start' : 'Connecting to the server…'}
+            placeholder={ready ? 'Ask for a change…' : info ? 'Add an AI key to start' : 'Connecting to the server…'}
             disabled={!ready || busy}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
           />
-          <button className="ag-send" aria-label="Send" disabled={!ready || busy || !text.trim()}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5" /></svg>
-          </button>
+          <div className="ag-input-bar">
+            <div className="ag-plus">
+              <button type="button" className={`ag-plus-btn${plusOpen ? ' on' : ''}`} aria-label="Add" aria-expanded={plusOpen} disabled={!ready || busy} onClick={() => setPlusOpen((o) => !o)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M12 5v14M5 12h14" /></svg>
+              </button>
+              {plusOpen && (
+                <ul className="ag-plus-menu" role="menu">
+                  {suggestions.map((sg) => (
+                    <li key={sg.title}><button type="button" role="menuitem" onClick={() => { setText(sg.text); setPlusOpen(false); box.current?.focus(); }}><Icon name={sg.icon} />{sg.title}</button></li>
+                  ))}
+                  <li className="ag-plus-sep"><button type="button" role="menuitem" disabled={!msgs.length} onClick={() => { setMsgs([]); setPlusOpen(false); }}><Icon name="plus" />New chat</button></li>
+                </ul>
+              )}
+            </div>
+            <button className="ag-send" aria-label="Send" title="Send (Enter)" disabled={!ready || busy || !text.trim()}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5" /></svg>
+            </button>
+          </div>
         </div>
       </form>
     </div>

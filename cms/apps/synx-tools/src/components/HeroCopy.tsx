@@ -19,7 +19,9 @@ function heroHeadline(text: string) {
   return text.replace(/\./g, "");
 }
 
-export function HeroCopy({ tagline }: { tagline: HeroTagline }) {
+export function HeroCopy({ tagline, editBase }: { tagline: HeroTagline; editBase?: string }) {
+  // click-to-edit in the CMS preview: the path of today's tagline in the home hero section
+  const mark = (field: string) => (editBase ? { "data-synx-edit": `${editBase}.${field}` } : {});
   const reduce = useReducedMotion();
   const copy = tagline;
   const lines = copy.lines.map(heroHeadline);
@@ -28,8 +30,8 @@ export function HeroCopy({ tagline }: { tagline: HeroTagline }) {
   if (reduce) {
     return (
       <div className="wrap">
-        <h1 className={copy.wide ? "hero-wide" : undefined}>{heading}</h1>
-        <p className="lede">{copy.text}</p>
+        <h1 className={copy.wide ? "hero-wide" : undefined} {...mark("lineOne")}>{heading}</h1>
+        <p className="lede" {...mark("text")}>{copy.text}</p>
       </div>
     );
   }
@@ -42,13 +44,13 @@ export function HeroCopy({ tagline }: { tagline: HeroTagline }) {
       variants={{ show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } } }}
     >
       <h1 className={copy.wide ? "hero-wide" : undefined}>
-        {lines.map((text) => (
+        {lines.map((text, i) => (
           <span className="hero-line" key={text}>
-            <motion.span variants={line}>{text}</motion.span>
+            <motion.span variants={line} {...mark(i === 0 ? "lineOne" : "lineTwo")}>{text}</motion.span>
           </span>
         ))}
       </h1>
-      <motion.p className="lede" variants={rise}>
+      <motion.p className="lede" variants={rise} {...mark("text")}>
         {copy.text}
       </motion.p>
     </motion.div>

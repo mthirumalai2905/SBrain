@@ -5,10 +5,18 @@ import { AiKeys } from './AiKeys';
 import { Connectors } from './Connectors';
 import { AiToolsConnect } from './AiToolsConnect';
 
-interface Props { user: User; site?: Site; sites: Site[]; reload: () => Promise<void>; onSelect: (id: string) => void }
+interface Props { user: User; site?: Site; sites: Site[]; reload: () => Promise<void>; onSelect: (id: string) => void; /** Goes back to the screen Settings was opened from. */ onBack?: () => void; backLabel?: string; /** Shown in a right panel instead of a whole page. */ panel?: boolean }
 type Section = 'website' | 'ai' | 'tools' | 'connect' | 'team' | 'sites';
 
 const KEY = 'cms_settings_section';
+const ICONS: Record<Section, ReactNode> = {
+  website: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+  ai: <><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" /><path d="M19 16v4M17 18h4" /></>,
+  tools: <><path d="M9 3v5M15 3v5" /><path d="M6 8h12v4a6 6 0 0 1-12 0z" /><path d="M12 18v3" /></>,
+  connect: <><path d="m8 8-5 4 5 4" /><path d="m16 8 5 4-5 4" /><path d="m14 5-4 14" /></>,
+  team: <><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M18 14.5a6 6 0 0 1 3 5.5" /></>,
+  sites: <><rect x="3" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" /></>,
+};
 const list = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
 
 /** One block of the page: a title, a plain sentence about it, then its controls. */
@@ -24,7 +32,7 @@ function Block({ title, hint, children }: { title: string; hint?: ReactNode; chi
   );
 }
 
-export function Settings({ user, site, reload, onSelect }: Props) {
+export function Settings({ user, site, reload, onSelect, onBack, backLabel = 'Structure', panel }: Props) {
   const admin = site?.role === 'ADMIN';
   const sections: { id: Section; label: string; hint: string; show: boolean }[] = [
     { id: 'website', label: 'Website', hint: 'Name, address and preview', show: !!site && admin },
@@ -70,18 +78,28 @@ export function Settings({ user, site, reload, onSelect }: Props) {
   }
 
   return (
-    <div className="settings">
+    <div className={`settings${panel ? ' in-modal' : ''}`}>
       <header className="set-title">
+        {onBack && !panel && (
+          <button className="back-btn" onClick={onBack} aria-label={`Back to ${backLabel}`} data-tip={`Back to ${backLabel} (Esc)`}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m15 18-6-6 6-6" /></svg>
+          </button>
+        )}
         <h2>Settings</h2>
-        {site && <p className="muted">for <b>{site.name}</b></p>}
+        {site && <span className="set-site">{site.name}</span>}
+        {onBack && panel && (
+          <button className="vp-close set-close" onClick={onBack} aria-label="Close settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        )}
       </header>
 
       <div className="set-layout">
         <nav className="set-nav" aria-label="Settings sections">
           {visible.map((s) => (
             <button key={s.id} className={current?.id === s.id ? 'on' : ''} aria-current={current?.id === s.id ? 'page' : undefined} onClick={() => { setPick(s.id); setErr(''); }}>
-              <b>{s.label}</b>
-              <small>{s.hint}</small>
+              <span className="set-ico" aria-hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{ICONS[s.id]}</svg></span>
+              <span className="set-txt"><b>{s.label}</b><small>{s.hint}</small></span>
             </button>
           ))}
         </nav>
@@ -103,7 +121,7 @@ export function Settings({ user, site, reload, onSelect }: Props) {
                   <label>
                     Preview address
                     <input placeholder="http://localhost:5180" value={previewUrl} onChange={(e) => { setPreviewUrl(e.target.value); setSaved(false); }} />
-                    <small className="muted">The copy of your site that Live preview shows while you edit, for example <code>http://localhost:5180</code>.</small>
+                    <small className="muted">The copy of your site that Preview shows while you edit, for example <code>http://localhost:5180</code>.</small>
                   </label>
                 </div>
                 <div className="row">
@@ -160,7 +178,7 @@ export function Settings({ user, site, reload, onSelect }: Props) {
 // → { title, sections: [{ _key, _type, ...fields }] }`}</pre>
               </Block>
 
-              <Block title="Edit it live (optional)" hint="Lets you click text on your own site, inside Live preview, to edit it. It does nothing for normal visitors.">
+              <Block title="Edit it live (optional)" hint="Lets you click text on your own site, inside Preview, to edit it. It does nothing for normal visitors.">
                 <details>
                   <summary>Show the setup</summary>
                   <pre>{`<!-- 1. Include the script (it does nothing outside the CMS preview) -->

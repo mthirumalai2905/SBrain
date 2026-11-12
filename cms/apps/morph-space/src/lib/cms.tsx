@@ -55,7 +55,14 @@ export function CmsProvider({ initial, children }: { initial: Cms; children: Rea
     const onPreview = (e: Event) => {
       const m = (e as CustomEvent).detail as { contentType?: string; entry?: Doc } | undefined;
       const key = m?.contentType ? part[m.contentType] : undefined;
-      if (key && m?.entry) setCms((c) => ({ ...c, [key]: m.entry }));
+      if (!key || !m?.entry) return;
+      // a draft of another page must not replace this one (the CMS can be showing a different page than the one in the frame)
+      if (key === "page") {
+        const entry = m.entry;
+        setCms((c) => (entry.slug && c.page?.slug && entry.slug !== c.page.slug ? c : { ...c, page: entry }));
+        return;
+      }
+      setCms((c) => ({ ...c, [key]: m.entry }));
     };
     window.addEventListener("synx:preview", onPreview);
     return () => window.removeEventListener("synx:preview", onPreview);
