@@ -1,0 +1,17 @@
+/* The Next.js original loads its fonts with next/font and exposes them as these variables. Here they are plain font stacks. */
+@font-face {
+  font-family: "Archivo";
+  src: url("../fonts/archivo-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+:root {
+  --font-outfit: "Archivo";
+  --font-display: "Archivo Black";
+  --font-plex: "JetBrains Mono";
+  --font-times-display: "Playfair Display";
+  --font-times-body: "Source Serif 4";
+  --font-times-label: "Libre Franklin";
+  --font-comic-display: "Bangers";
+  --font-comic-body: "Comic Neue";
+}

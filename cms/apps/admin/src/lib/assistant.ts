@@ -74,13 +74,14 @@ export function applyProposalTo(
 
 /**
  * Whether the assistant panel is open. One setting for the whole app: the button in the top bar, the panel in Structure and the
- * AI tab in Live preview all follow it. Closed the first time; after that it stays as you left it.
+ * AI tab in Live preview all follow it. Always closed when the app loads, so editing starts on Edit; it stays as you leave it
+ * until the page is reloaded.
  */
-let aiOpen = (() => { try { return localStorage.getItem('cms_ai_open') === '1'; } catch { return false; } })();
+let aiOpen = false;
 const aiListeners = new Set<() => void>();
+try { localStorage.removeItem('cms_ai_open'); } catch { /* ignore */ }
 const setAiOpen = (v: boolean) => {
   aiOpen = v;
-  try { localStorage.setItem('cms_ai_open', v ? '1' : '0'); } catch { /* ignore */ }
   aiListeners.forEach((f) => f());
 };
 export function useAiOpen(): [boolean, () => void] {
