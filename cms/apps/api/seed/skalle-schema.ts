@@ -67,8 +67,7 @@ export const skalleTypes: TypeDef[] = [
       text('index', 'Number tag', { group: 'Label' }),
       text('kicker', 'Label', { group: 'Label' }),
       area('lede', 'Intro line', { group: 'Copy' }),
-      text('titleTop', 'Big title, line 1', { group: 'Copy' }),
-      text('titleBottom', 'Big title, line 2', { group: 'Copy' }),
+      area('title', 'Big title (a new line breaks the title)', { group: 'Copy' }),
       text('openLabel', 'Open button', { group: 'Buttons' }),
       text('openUrl', 'Open button link', { group: 'Buttons' }),
       text('specsLabel', 'Specs button (opens the spec manual)', { group: 'Buttons' }),
@@ -103,10 +102,7 @@ export const skalleTypes: TypeDef[] = [
       text('index', 'Number tag', { group: 'Label' }),
       text('kicker', 'Label', { group: 'Label' }),
       text('signal', 'Small note beside the label', { group: 'Label' }),
-      list('headline', 'Headline words', [
-        { name: 'text', label: 'Word', type: 'text' },
-        { name: 'accent', label: 'Highlighted', type: 'boolean' },
-      ], { group: 'Copy' }),
+      text('headline', 'Headline (*stars* highlight a word)', { group: 'Copy' }),
       area('lede', 'Intro', { group: 'Copy' }),
       text('terminalTitle', 'Terminal title', { group: 'Terminal' }),
       list('terminal', 'Terminal lines', [

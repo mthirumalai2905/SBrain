@@ -9,7 +9,8 @@
     "migrate": "prisma migrate dev",
     "deploy": "prisma migrate deploy",
     "gateway": "tsx src/gateway.ts",
-    "seed:skalle": "tsx seed/skalle-seed.ts"
+    "seed:skalle": "tsx seed/skalle-seed.ts",
+    "seed:rtw": "tsx seed/rtw-seed.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.0.0",

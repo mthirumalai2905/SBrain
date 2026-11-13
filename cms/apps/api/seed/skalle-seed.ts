@@ -113,7 +113,7 @@ const cardItems = (list: { name: string; body: string }[]) => list.map((x) => ({
 /* ---------------- home */
 const homeSections = [
   sec('home-hero', {
-    index: '/01', kicker: 'Skalle AI', lede: S.heroLede, titleTop: 'Skalle', titleBottom: 'Intelligence',
+    index: '/01', kicker: 'Skalle AI', lede: S.heroLede, title: 'Skalle\nIntelligence',
     openLabel: OPEN, openUrl: S.exploreHref, specsLabel: 'Read the specs', systemLabel: 'Read the system', systemUrl: '/system',
     figure: await up('/brand/skalle-center.png'), figureAlt: 'Skalle, a gentleman robot in a dark overcoat, hands at his chest.',
     meta: [{ k: 'Intelligence', v: 'Your model' }, { k: 'Product', v: 'Skalle AI' }, { k: 'Network', v: 'Real Time Web' }],
@@ -363,7 +363,7 @@ const careersSections = [
   }),
   sec('careers-hero', {
     index: '/06.1', kicker: 'Openings', signal: '// signal incoming',
-    headline: [{ text: "We're" }, { text: 'hiring', accent: true }, { text: 'soon.' }],
+    headline: "We're *hiring* soon.",
     lede: S.careers.note, terminalTitle: 'skalle@careers:~',
     terminal: [
       { prompt: 'ping', text: 'skalle.careers' }, { prompt: 'status', text: 'HIRING_SOON' }, { prompt: 'open_roles', text: '0 // not posted yet' },

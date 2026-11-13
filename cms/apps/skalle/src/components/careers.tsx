@@ -10,7 +10,8 @@ type Doc = Record<string, any>;
 
 /** The "We're hiring soon" block: headline, terminal, Discord button and the assembling robot. */
 export function CareersHero({ d }: { d: Doc }) {
-  const words = list(d.headline);
+  // "We're *hiring* soon.": every word is glitched on its own, and a word between stars is highlighted
+  const words = String(d.headline ?? "").split(" ").filter(Boolean).map((w) => ({ text: w.replace(/\*/g, ""), accent: w.startsWith("*") }));
   return (
     <section className="cy-hero">
       <div className="cy-copy">

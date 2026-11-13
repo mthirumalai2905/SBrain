@@ -1,0 +1,58 @@
+/* Clean pass: the standard dark theme of a product. Neutral greys, one blue accent, ordinary sentence-case labels,
+   no tracked-out capitals, no glow. Loaded last, so it settles everything before it without touching behaviour. */
+
+:root {
+  color-scheme: dark;
+  --bg: #111113;
+  --panel: #19191c;
+  --panel-2: #212125;
+  --field: #141416;
+  --ink: #ececef;
+  --muted: #9b9ba4;
+  --line: #2b2b30;
+  --line-strong: #3a3a40;
+  --accent: #3b82f6;
+  --accent-hover: #2f6fe0;
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, .5);
+  --ring: 0 0 0 1px var(--accent);
+}
+
+/* ----- scrollbars and overlays: grey, not blue-grey ----- */
+* { scrollbar-color: #34343a transparent; }
+::-webkit-scrollbar-thumb { background: #34343a; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: #45454c; background-clip: padding-box; }
+.overlay, .settings-backdrop { background: rgba(0, 0, 0, .6); }
+.versions-panel { box-shadow: -8px 0 24px rgba(0, 0, 0, .35); }
+
+/* ----- labels: plain words, not small tracked capitals ----- */
+.lbl, .conn-form label, .key-fields label, .tk-add label, .tk-field span, .set-form label span {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.lbl { margin-bottom: 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.tk-field span { font-size: 13px; font-weight: 500; }
+.tree-label, .col-label, .vp-day, .pp-label, .group-title, .fg-title {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.tree-label { padding: 16px 14px 6px; }
+.col-label { padding: 16px 12px 6px; }
+.media img, .media .file { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.bp-count, .chip, .pill, .status-pill { letter-spacing: 0; text-transform: none; }
+
+/* ----- fields: flat, a thin accent line on focus, no halo ----- */
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: none; }
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]), select, textarea { background-color: var(--field); }
+input:-webkit-autofill { box-shadow: 0 0 0 1000px var(--panel-2) inset; }
+
+/* ----- the blue-grey leftovers ----- */
+.tree-item.on svg:first-child, .set-nav button.on .set-ico { color: var(--ink); }
+.tree-item svg:first-child, .tree-item svg:last-child { color: var(--muted); }
+.avatar { background: #3a3a40; color: #ececef; }
+.bp-avatar.ai, .vp-avatar.ai { color: var(--ink); background: var(--panel-2); border-color: var(--line-strong); }
+.bp-list li.new { background: rgba(255, 255, 255, .03); }
+.cc-perm label.on { background: var(--panel-2); }
+.card, .set-block, .list, .media, .vp-card { background: var(--panel); border-color: var(--line); }

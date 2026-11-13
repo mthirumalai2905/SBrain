@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <title>Real Time Web</title>
+    <meta name="description" content="An architecture for interconnected real time digital spaces. Public documentation for architects, developers, researchers, and partners." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Pixelify+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      (function () { try { var t = localStorage.getItem("rtw-theme"); if (t === "light" || t === "dark") { document.documentElement.dataset.theme = t; document.documentElement.style.colorScheme = t; } } catch (e) {} })();
+    </script>
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

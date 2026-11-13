@@ -120,7 +120,7 @@ function renderOne(s: Sec): ReactNode {
             </div>
           </div>
           <div className="lab-hero-figure">
-            <h1 data-synx-edit={`${s._key}.titleTop`}>{s.titleTop}<br />{s.titleBottom}</h1>
+            <h1 data-synx-edit={`${s._key}.title`}>{String(s.title ?? "").split("\n").map((line, i) => (i ? <span key={i}><br />{line}</span> : line))}</h1>
             <HeroSkalle href={s.openUrl} src={s.figure} alt={s.figureAlt} />
           </div>
           <dl className="lab-hero-meta">

@@ -275,7 +275,8 @@ export function Structure({ site, canEdit, goTypes }: { site: Site; canEdit: boo
           {listDocs.map((e) => (
             <button key={e.id} className={`doc-row${sel?.id === e.id ? ' on' : ''}`} onClick={() => setSel(e)}>
               <span className="doc-title">{titleOf(e, activeType)}</span>
-              <span className={`dot ${e.status.toLowerCase()}`} title={e.status.toLowerCase()} />
+              {/* the filter above already says which status this is, so the dot only shows when the list mixes both */}
+              {filter === 'ALL' ? <span className={`dot ${e.status.toLowerCase()}`} title={e.status.toLowerCase()} /> : <span />}
               <span className="muted doc-date">{new Date(e.updatedAt).toLocaleDateString()}</span>
             </button>
           ))}

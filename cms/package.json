@@ -5,7 +5,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n api,admin,morph,synx,skalle -c blue,magenta,green,yellow,red \"npm:dev:api\" \"npm:dev:admin\" \"npm:dev:site\" \"npm:dev:synx\" \"npm:dev:skalle\"",
+    "dev": "concurrently -n api,admin,morph,synx,skalle,rtw -c blue,magenta,green,yellow,red,cyan \"npm:dev:api\" \"npm:dev:admin\" \"npm:dev:site\" \"npm:dev:synx\" \"npm:dev:skalle\" \"npm:dev:rtw\"",
     "db:up": "docker compose up -d",
     "db:migrate": "npm run migrate -w apps/api",
     "dev:api": "npm run dev -w apps/api",
@@ -14,6 +14,7 @@
     "dev:site": "npm run dev -w apps/morph-space",
     "dev:synx": "npm run dev -w apps/synx-tools",
     "dev:skalle": "npm run dev -w apps/skalle",
+    "dev:rtw": "npm run dev -w apps/rtw",
     "mcp:public": "npm run gateway -w apps/api"
   },
   "devDependencies": {
